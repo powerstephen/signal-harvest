@@ -1,7 +1,7 @@
 """
 Signal Harvest — extraction engine.
 Two modes:
-  - domain: given a list of domains, extract contacts directly
+  - domain: given a list of domains, extract contacts directly  
   - search: given an ICP description, find companies via SERP then extract
 """
 
@@ -30,7 +30,7 @@ SKIP_DOMAINS = {
     "facebook.com", "instagram.com", "twitter.com", "x.com", "linkedin.com",
     "youtube.com", "tiktok.com", "wikipedia.org", "amazon.com", "yelp.com",
     "google.com", "bing.com", "duckduckgo.com", "github.com", "medium.com",
-    "g2.com", "capterra.com", "trustpilot.com", "crunchbase.com", "bloomberg.com",
+    "g2.com", "capterra.com", "trustpilot.com", "crunchbase.com",
 }
 LOW_VALUE_PATTERNS = re.compile(
     r"/(blog|news|press|posts?|articles?|insights?|guides?|tutorials?|"
@@ -40,9 +40,10 @@ LOW_VALUE_PATTERNS = re.compile(
 )
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate",
 }
 
 
@@ -95,24 +96,32 @@ def _is_generic_email(e: str) -> bool:
     return prefix in GENERIC_EMAIL_PREFIX
 
 
-async def _fetch_text(client: httpx.AsyncClient, url: str) -> str:
+async def _fetch_url(url: str, timeout: int = 15) -> str:
     try:
-        r = await client.get(url, timeout=15, follow_redirects=True, headers=HEADERS)
-        return r.text[:15000]
-    except Exception:
+        async with httpx.AsyncClient(
+            headers=HEADERS,
+            follow_redirects=True,
+            timeout=timeout,
+            verify=False
+        ) as c:
+            r = await c.get(url)
+            if r.status_code == 200:
+                return r.text[:15000]
+            return ""
+    except Exception as e:
         return ""
 
 
 async def _fetch_site_text(base_url: str) -> str:
     chunks = []
-    async with httpx.AsyncClient() as c:
-        for path in ["", "/about", "/about-us", "/team", "/contact"]:
-            target = base_url.rstrip("/") + path if path else base_url
-            text = await _fetch_text(c, target)
-            if text:
-                chunks.append(text[:4000])
-            if len("\n".join(chunks)) > 10000:
-                break
+    for path in ["", "/about", "/about-us", "/team", "/contact"]:
+        target = base_url.rstrip("/") + path if path else base_url
+        text = await _fetch_url(target)
+        if text:
+            chunks.append(text[:4000])
+        if len("\n".join(chunks)) > 10000:
+            break
+        await asyncio.sleep(0.3)
     return "\n".join(chunks)[:10000]
 
 
@@ -133,38 +142,54 @@ def _regex_emails(text: str, host: str) -> list[str]:
 
 
 async def _ddg_search(query: str) -> list[dict]:
-    url = "https://html.duckduckgo.com/html/?" + urlencode({"q": query})
+    url = "https://html.duckduckgo.com/html/?" + urlencode({"q": query, "kl": "us-en"})
     try:
-        async with httpx.AsyncClient() as c:
-            r = await c.get(url, timeout=20, headers=HEADERS, follow_redirects=True)
-            text = r.text
+        text = await _fetch_url(url, timeout=20)
+        if not text:
+            return []
     except Exception:
         return []
+    
     results = []
-    for m in re.finditer(r'class="result__a"[^>]*href="([^"]+)"[^>]*>([^<]+)', text):
-        href, title = m.group(1), m.group(2)
+    # Parse DDG results
+    for m in re.finditer(r'class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>', text, re.DOTALL):
+        href = m.group(1)
+        title = re.sub(r'<[^>]+>', '', m.group(2)).strip()
+        # Extract real URL from DDG redirect
         m2 = re.search(r"uddg=([^&]+)", href)
         real = unquote(m2.group(1)) if m2 else href
-        results.append({"url": real, "title": title.strip(), "snippet": ""})
+        if real.startswith("http"):
+            results.append({"url": real, "title": title, "snippet": ""})
+    
     return results[:15]
 
 
 async def _process_domain(domain: str, signal: str, country: str, notes: str, log_cb) -> dict | None:
     base_url = f"https://{domain}"
-    await log_cb(f"Fetching: {domain}")
+    await log_cb(f"Fetching {domain}...")
+    
     try:
         text = await _fetch_site_text(base_url)
     except Exception as e:
-        await log_cb(f"  failed: {e}")
+        await log_cb(f"  fetch error: {e}")
         return None
 
     if not text:
-        await log_cb(f"  no content: {domain}")
-        return None
+        await log_cb(f"  no content from {domain} — trying anyway with LLM")
+        text = f"Company website: {base_url}"
 
     emails = _regex_emails(text, domain)
-    llm_data = await extract_contacts_enhanced(domain, text, domain_hint=domain)
-    industry = await classify_industry(domain, llm_data.get("description", ""), base_url)
+    
+    try:
+        llm_data = await extract_contacts_enhanced(domain, text, domain_hint=domain)
+    except Exception as e:
+        await log_cb(f"  LLM error: {e}")
+        llm_data = {"first_name": "", "last_name": "", "job_title": "", "emails": [], "phones": [], "linkedin_url": "", "employee_count": "", "description": ""}
+
+    try:
+        industry = await classify_industry(domain, llm_data.get("description", ""), base_url)
+    except Exception:
+        industry = "Other"
 
     llm_emails = [e for e in llm_data.get("emails", []) if _valid_email(e)]
     all_emails = list(dict.fromkeys(llm_emails + emails))
@@ -174,7 +199,7 @@ async def _process_domain(domain: str, signal: str, country: str, notes: str, lo
     first = llm_data.get("first_name", "")
     last = llm_data.get("last_name", "")
 
-    await log_cb(f"  done — {first} {last} | {len(final_emails)} emails | {industry}")
+    await log_cb(f"  ✓ {domain} — {first} {last} | {len(final_emails)} emails | {industry}")
 
     return {
         "company": domain.split(".")[0].replace("-", " ").title(),
@@ -197,23 +222,31 @@ async def _process_domain(domain: str, signal: str, country: str, notes: str, lo
 
 
 async def run_domain_mode(domains: list[tuple[str, str]], country: str, notes: str, log_cb=None) -> AsyncIterator[dict]:
-    async def log(msg): 
+    async def log(msg):
         if log_cb: await log_cb(msg)
 
-    await log(f"Domain mode: {len(domains)} domains")
+    await log(f"Starting domain mode: {len(domains)} domain(s)")
+    
     for raw_domain, signal in domains:
         domain = _normalise_domain(raw_domain)
         if not domain:
+            await log(f"Skipping invalid: {raw_domain}")
             continue
-        result = await _process_domain(domain, signal, country, notes, log)
-        if result:
-            yield result
+        try:
+            result = await _process_domain(domain, signal, country, notes, log)
+            if result:
+                yield result
+            else:
+                await log(f"  no result for {domain}")
+        except Exception as e:
+            await log(f"  error on {domain}: {e}")
         await asyncio.sleep(0.5)
-    await log("Done.")
+    
+    await log(f"✓ Domain mode complete.")
 
 
 SCORE_THRESHOLD = 35
-MAX_ROUNDS = 4
+MAX_ROUNDS = 3
 
 
 async def run_search_mode(icp: str, country: str, notes: str, limit: int, log_cb=None) -> AsyncIterator[dict]:
@@ -225,7 +258,7 @@ async def run_search_mode(icp: str, country: str, notes: str, limit: int, log_cb
     seen: set[str] = set()
     used_queries: list[str] = []
 
-    await log(f"Search mode: {target} leads for '{icp}'")
+    await log(f"Search mode: targeting {target} leads for '{icp}'")
 
     for round_num in range(1, MAX_ROUNDS + 1):
         if yielded >= target:
@@ -245,10 +278,11 @@ async def run_search_mode(icp: str, country: str, notes: str, limit: int, log_cb
         used_queries.extend(new_queries)
 
         candidates = []
-        for q in new_queries:
+        for q in new_queries[:4]:  # limit queries per round
             await log(f"SERP: {q}")
             try:
                 results = await _ddg_search(q)
+                await log(f"  got {len(results)} results")
             except Exception as e:
                 await log(f"  SERP error: {e}")
                 results = []
@@ -261,16 +295,16 @@ async def run_search_mode(icp: str, country: str, notes: str, limit: int, log_cb
             await asyncio.sleep(1)
 
         if not candidates:
-            await log("No new candidates.")
+            await log("No new candidates this round.")
             continue
 
         await log(f"{len(candidates)} candidates — scoring...")
         scored = []
         for c in candidates:
             try:
-                s = await score_company(c["title"], c["url"], c["snippet"], icp, notes)
+                s = await score_company(c["title"], c["url"], c.get("snippet", ""), icp, notes)
             except Exception:
-                s = {"score": 0.0, "reason": ""}
+                s = {"score": 50.0, "reason": ""}  # default pass if scoring fails
             if s["score"] >= SCORE_THRESHOLD:
                 c["score"] = s["score"]
                 c["reason"] = s["reason"]
@@ -283,13 +317,16 @@ async def run_search_mode(icp: str, country: str, notes: str, limit: int, log_cb
             if yielded >= target:
                 break
             host = _root_domain(c["url"])
-            result = await _process_domain(host, "", country, notes, log)
-            if result:
-                result["relevance_score"] = c["score"]
-                result["relevance_reason"] = c["reason"]
-                result["source_url"] = c["url"]
-                yielded += 1
-                yield result
+            try:
+                result = await _process_domain(host, "", country, notes, log)
+                if result:
+                    result["relevance_score"] = c["score"]
+                    result["relevance_reason"] = c["reason"]
+                    result["source_url"] = c["url"]
+                    yielded += 1
+                    yield result
+            except Exception as e:
+                await log(f"  error: {e}")
             await asyncio.sleep(0.5)
 
     await log(f"✓ Done. {yielded} prospects found.")
