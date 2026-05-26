@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Harvest</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌾</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080d1a; --surface: #0f1e36; --surface2: #162a4a;
+  --border: #1e3560; --teal: #00c4d4; --teal2: #0096a8;
+  --text: #e8edf5; --muted: #64748b;
+  --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Montserrat', sans-serif; background: #1a1a1a; color: var(--text); min-height: 100vh; }
+.wrap { max-width: 1100px; margin: 0 auto; background: var(--bg); min-height: 100vh; }
+
+/* Header */
+.header { background: #222; border-bottom: 1px solid #333; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; }
+.brand { font-size: 18px; font-weight: 800; }
+.brand span { color: var(--teal); }
+.brand-sub { font-size: 11px; color: var(--muted); margin-left: 10px; }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 52px); }
+.sidebar { border-right: 1px solid var(--border); padding: 24px; background: var(--surface); }
+.main { padding: 24px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.tab { flex: 1; padding: 8px; text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; background: transparent; border: none; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.15s; }
+.tab.active { background: var(--teal); color: #080d1a; }
+
+/* Form */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; color: var(--text);
+  font-family: 'Montserrat', sans-serif; font-size: 12px;
+}
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--teal); }
+.field textarea { resize: vertical; min-height: 80px; }
+.field-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+.btn-primary {
+  width: 100%; background: linear-gradient(135deg, var(--teal), var(--teal2));
+  color: #080d1a; font-family: 'Montserrat', sans-serif; font-size: 13px;
+  font-weight: 800; padding: 12px; border: none; border-radius: 8px;
+  cursor: pointer; margin-bottom: 8px;
+}
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-cancel {
+  width: 100%; background: transparent; border: 1px solid var(--border);
+  color: var(--muted); font-family: 'Montserrat', sans-serif; font-size: 12px;
+  font-weight: 600; padding: 8px; border-radius: 8px; cursor: pointer;
+  display: none;
+}
+
+/* Log */
+.log-bar {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 12px; font-size: 11px; color: var(--teal); margin-bottom: 16px;
+  display: none; font-family: monospace;
+}
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+.stat-val { font-size: 22px; font-weight: 900; color: var(--teal); }
+.stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+/* Results table */
+.results-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface); }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(30,53,96,0.4); vertical-align: top; }
+tr:hover td { background: rgba(15,30,54,0.5); }
+.company-name { font-weight: 700; color: var(--text); }
+.company-url { font-size: 10px; color: var(--teal); }
+.industry-badge { font-size: 9px; font-weight: 600; background: rgba(0,196,212,0.1); color: var(--teal); padding: 2px 6px; border-radius: 3px; }
+.email-link { color: var(--green); font-size: 11px; }
+.score-high { color: var(--green); font-weight: 700; }
+.score-mid { color: var(--amber); font-weight: 700; }
+.score-low { color: var(--red); font-weight: 700; }
+.signal-tag { font-size: 9px; background: rgba(245,158,11,0.1); color: var(--amber); padding: 2px 6px; border-radius: 3px; }
+
+/* Sessions history */
+.section-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+.session-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+.session-item:hover { border-color: var(--teal); }
+.session-name { font-size: 12px; font-weight: 700; }
+.session-meta { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.session-status { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; }
+.status-completed { background: rgba(16,185,129,0.15); color: var(--green); }
+.status-running { background: rgba(0,196,212,0.15); color: var(--teal); }
+.status-error { background: rgba(239,68,68,0.15); color: var(--red); }
+
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.export-btn {
+  display: none; background: transparent; border: 1px solid var(--border);
+  color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 11px;
+  font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 16px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="header">
+  <div>
+    <span class="brand">🌾 Signal<span>Harvest</span></span>
+    <span class="brand-sub">· Prospect Intelligence</span>
+  </div>
+  <div style="font-size:11px;color:var(--muted);" id="headerDate"></div>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="tabs">
+      <button class="tab active" onclick="setMode('domain')" id="tab-domain">Domain List</button>
+      <button class="tab" onclick="setMode('search')" id="tab-search">ICP Search</button>
+    </div>
+
+    <!-- Domain mode -->
+    <div id="form-domain">
+      <div class="field">
+        <label>Client / Campaign Name</label>
+        <input type="text" id="client_name" placeholder="e.g. SMH Q2 Outreach">
+      </div>
+      <div class="field">
+        <label>Domains (one per line)</label>
+        <textarea id="domains" placeholder="acme.com&#10;example.co.uk&#10;target.io"></textarea>
+        <div class="field-hint">Paste domains or URLs — one per line. Optional: add a signal after a comma (e.g. acme.com, hiring VP Sales)</div>
+      </div>
+      <div class="field">
+        <label>Country</label>
+        <input type="text" id="country_domain" placeholder="e.g. UK, Ireland, US">
+      </div>
+      <div class="field">
+        <label>Notes / Context</label>
+        <input type="text" id="notes_domain" placeholder="e.g. B2B SaaS, looking for CROs">
+      </div>
+    </div>
+
+    <!-- Search mode -->
+    <div id="form-search" style="display:none;">
+      <div class="field">
+        <label>Client / Campaign Name</label>
+        <input type="text" id="client_name_search" placeholder="e.g. SMH Q2 Outreach">
+      </div>
+      <div class="field">
+        <label>ICP Description</label>
+        <textarea id="icp" placeholder="e.g. B2B SaaS companies 50-500 employees in the UK with a VP Sales or CRO, likely to invest in sales methodology training"></textarea>
+      </div>
+      <div class="field">
+        <label>Country</label>
+        <input type="text" id="country_search" placeholder="e.g. UK">
+      </div>
+      <div class="field">
+        <label>Leads to find</label>
+        <input type="number" id="limit" value="10" min="1" max="25">
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <input type="text" id="notes_search" placeholder="Additional context for scoring">
+      </div>
+    </div>
+
+    <button class="btn-primary" id="runBtn" onclick="startRun()">🌾 Harvest Prospects</button>
+    <button class="btn-cancel" id="cancelBtn" onclick="cancelRun()">✕ Cancel</button>
+
+    <div style="margin-top:24px;">
+      <div class="section-title">Recent Sessions</div>
+      <div id="sessionsList"></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="log-bar" id="logBar"></div>
+
+    <div id="stats" style="display:none;">
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="sTotal">0</div><div class="stat-label">Prospects</div></div>
+        <div class="stat"><div class="stat-val" id="sEmails">0</div><div class="stat-label">With Email</div></div>
+        <div class="stat"><div class="stat-val" id="sContacts">0</div><div class="stat-label">Named Contact</div></div>
+        <div class="stat"><div class="stat-val" id="sHigh">0</div><div class="stat-label">High Score</div></div>
+      </div>
+      <button class="export-btn" id="exportBtn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+
+    <div id="results">
+      <div class="empty">
+        <div class="empty-icon">🌾</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Ready to harvest</div>
+        <div style="font-size:12px;">Paste domains or describe your ICP and hit Harvest.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+let mode = 'domain';
+let sse = null;
+let prospects = [];
+let currentSessionId = null;
+let pollInterval = null;
+
+document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('form-domain').style.display = m === 'domain' ? 'block' : 'none';
+  document.getElementById('form-search').style.display = m === 'search' ? 'block' : 'none';
+  document.getElementById('tab-domain').classList.toggle('active', m === 'domain');
+  document.getElementById('tab-search').classList.toggle('active', m === 'search');
+}
+
+function setRunning(running) {
+  document.getElementById('runBtn').disabled = running;
+  document.getElementById('cancelBtn').style.display = running ? 'block' : 'none';
+  const log = document.getElementById('logBar');
+  log.style.display = running ? 'block' : 'none';
+  if (!running) log.textContent = '';
+}
+
+async function startRun() {
+  prospects = [];
+  let body = {mode};
+
+  if (mode === 'domain') {
+    const raw = document.getElementById('domains').value.trim();
+    if (!raw) return alert('Please enter at least one domain.');
+    const domains = raw.split('\n').filter(l => l.trim()).map(l => {
+      const [d, ...rest] = l.split(',');
+      return [d.trim(), rest.join(',').trim()];
+    });
+    body.domains = domains;
+    body.client_name = document.getElementById('client_name').value;
+    body.country = document.getElementById('country_domain').value;
+    body.notes = document.getElementById('notes_domain').value;
+    body.input_data = raw;
+  } else {
+    const icp = document.getElementById('icp').value.trim();
+    if (!icp) return alert('Please describe your ICP.');
+    body.icp = icp;
+    body.client_name = document.getElementById('client_name_search').value;
+    body.country = document.getElementById('country_search').value;
+    body.notes = document.getElementById('notes_search').value;
+    body.limit = parseInt(document.getElementById('limit').value) || 10;
+    body.input_data = icp;
+  }
+
+  setRunning(true);
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('stats').style.display = 'none';
+  document.getElementById('exportBtn').style.display = 'none';
+
+  try {
+    const resp = await fetch('/api/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      alert(err.detail || 'Failed to start');
+      setRunning(false);
+      return;
+    }
+    const data = await resp.json();
+    currentSessionId = data.session_id;
+    connectSSE();
+    startPolling();
+  } catch(e) {
+    alert('Error: ' + e.message);
+    setRunning(false);
+  }
+}
+
+async function cancelRun() {
+  await fetch('/api/cancel', {method:'POST'});
+}
+
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const r = await fetch('/api/status');
+      const s = await r.json();
+      if (!s.running && prospects.length > 0) {
+        clearInterval(pollInterval);
+        setRunning(false);
+        updateStats();
+        loadSessions();
+      } else if (s.running) {
+        document.getElementById('logBar').textContent = `Harvesting... ${prospects.length} prospects found so far`;
+      }
+    } catch(e) {}
+  }, 2000);
+}
+
+function connectSSE() {
+  if (sse) sse.close();
+  try {
+    sse = new EventSource('/api/stream');
+    sse.addEventListener('log', e => {
+      const d = JSON.parse(e.data);
+      document.getElementById('logBar').textContent = d.msg;
+      document.getElementById('logBar').style.display = 'block';
+    });
+    sse.addEventListener('prospect', e => {
+      const d = JSON.parse(e.data);
+      prospects.push(d.prospect);
+      renderProspects();
+      updateStats();
+    });
+    sse.addEventListener('done', e => {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      setRunning(false);
+      updateStats();
+      loadSessions();
+      if (sse) { sse.close(); sse = null; }
+    });
+    sse.addEventListener('ping', () => {});
+    sse.onerror = () => { if (sse) sse.close(); };
+  } catch(e) {}
+}
+
+function updateStats() {
+  const total = prospects.length;
+  const withEmail = prospects.filter(p => p.email).length;
+  const named = prospects.filter(p => p.first_name).length;
+  const high = prospects.filter(p => p.relevance_score >= 70).length;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sEmails').textContent = withEmail;
+  document.getElementById('sContacts').textContent = named;
+  document.getElementById('sHigh').textContent = high;
+  if (total > 0) {
+    document.getElementById('stats').style.display = 'block';
+    document.getElementById('exportBtn').style.display = 'inline-block';
+  }
+}
+
+function scoreClass(score) {
+  if (score >= 70) return 'score-high';
+  if (score >= 40) return 'score-mid';
+  return 'score-low';
+}
+
+function renderProspects() {
+  if (!prospects.length) return;
+  const rows = prospects.map(p => `
+    <tr>
+      <td>
+        <div class="company-name">${p.company || ''}</div>
+        <div class="company-url"><a href="${p.website}" target="_blank" style="color:var(--teal);">${(p.website||'').replace(/^https?:\/\//,'')}</a></div>
+        ${p.industry ? `<div style="margin-top:4px;"><span class="industry-badge">${p.industry}</span></div>` : ''}
+      </td>
+      <td>
+        ${p.first_name || p.last_name ? `<div style="font-weight:600;">${p.first_name} ${p.last_name}</div>` : '<span style="color:var(--muted);">—</span>'}
+        ${p.job_title ? `<div style="font-size:10px;color:var(--muted);">${p.job_title}</div>` : ''}
+      </td>
+      <td>
+        ${p.email ? `<a class="email-link" href="mailto:${p.email}">${p.email}</a>` : '<span style="color:var(--muted);">—</span>'}
+        ${p.phone ? `<div style="font-size:10px;color:var(--muted);">${p.phone}</div>` : ''}
+      </td>
+      <td style="font-size:11px;color:var(--muted);max-width:200px;">${(p.description||'').substring(0,120)}${p.description?.length>120?'...':''}</td>
+      <td>
+        ${p.signal ? `<span class="signal-tag">${p.signal}</span>` : ''}
+        ${p.relevance_score > 0 ? `<div class="${scoreClass(p.relevance_score)}" style="margin-top:4px;">${Math.round(p.relevance_score)}</div>` : ''}
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="results-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Contact</th>
+            <th>Email / Phone</th>
+            <th>Description</th>
+            <th>Signal / Score</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+async function exportCSV() {
+  if (!currentSessionId) return;
+  window.location = `/api/sessions/${currentSessionId}/export.csv`;
+}
+
+async function loadSessions() {
+  try {
+    const r = await fetch('/api/sessions');
+    const sessions = await r.json();
+    const el = document.getElementById('sessionsList');
+    if (!sessions.length) {
+      el.innerHTML = '<div style="font-size:11px;color:var(--muted);">No sessions yet.</div>';
+      return;
+    }
+    el.innerHTML = sessions.slice(0, 8).map(s => `
+      <div class="session-item" onclick="loadSession(${s.id})">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="session-name">${s.client_name || (s.mode === 'search' ? 'ICP Search' : 'Domain List')}</div>
+          <span class="session-status status-${s.status}">${s.status}</span>
+        </div>
+        <div class="session-meta">${s.lead_count} prospects · ${s.mode} · ${s.started_at ? new Date(s.started_at).toLocaleDateString() : ''}</div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function loadSession(id) {
+  try {
+    const r = await fetch(`/api/sessions/${id}`);
+    const data = await r.json();
+    prospects = data.prospects;
+    currentSessionId = id;
+    renderProspects();
+    updateStats();
+  } catch(e) {}
+}
+
+loadSessions();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sse-starlette
+pydantic
+sqlalchemy
+python-dotenv
+groq
+scrapling
+httpx
