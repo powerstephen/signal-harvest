@@ -13,7 +13,7 @@ from sse_starlette.sse import EventSourceResponse
 from db.session import init_db, get_db
 from db.models import ProspectSession, Prospect
 from server import runner
-from scraper.yellowpages import search_yellowpages
+from scraper.maps import search_maps
 
 UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
@@ -73,8 +73,8 @@ async def status():
 
 
 
-@app.post("/api/yp")
-async def yp_search(request: Request):
+@app.post("/api/maps")
+async def maps_search(request: Request):
     body = await request.json()
     industry = body.get("industry", "")
     location = body.get("location", "")
@@ -92,12 +92,11 @@ async def yp_search(request: Request):
         await runner.hub.broadcast({"type": "start", "session_id": 0})
 
         try:
-            results = await search_yellowpages(industry, location, limit, log_cb)
-            # Save to DB
+            results = await search_maps(industry, location, limit, log_cb)
             with get_db() as db:
                 s = ProspectSession(
                     client_name=client_name or f"{industry} - {location}",
-                    mode="yellowpages",
+                    mode="maps",
                     input_data=f"{industry} | {location}",
                     status="completed",
                     lead_count=len(results),
@@ -106,25 +105,14 @@ async def yp_search(request: Request):
                 db.flush()
                 session_id = s.id
                 for r in results:
-                    row = Prospect(
-                        session_id=session_id,
-                        company=r.get("company",""),
-                        website=r.get("website",""),
-                        industry=r.get("industry",""),
-                        employee_count=r.get("employee_count",""),
-                        description=r.get("description",""),
-                        country=r.get("country","US"),
-                        first_name=r.get("first_name",""),
-                        last_name=r.get("last_name",""),
-                        email=r.get("email",""),
-                        phone=r.get("phone",""),
-                        job_title=r.get("job_title",""),
-                        linkedin_url=r.get("linkedin_url",""),
-                        signal=r.get("signal",""),
-                        relevance_score=r.get("relevance_score",0.0),
-                        relevance_reason=r.get("relevance_reason",""),
-                        source_url=r.get("source_url",""),
-                    )
+                    row = Prospect(session_id=session_id, **{
+                        k: r.get(k, "") for k in [
+                            "company","website","industry","employee_count","description",
+                            "country","first_name","last_name","email","phone",
+                            "job_title","linkedin_url","signal","relevance_reason","source_url"
+                        ]
+                    })
+                    row.relevance_score = r.get("relevance_score", 0.0)
                     db.add(row)
                     await runner.hub.broadcast({"type": "prospect", "prospect": {**r, "id": 0, "session_id": session_id}})
 

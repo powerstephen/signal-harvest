@@ -125,7 +125,7 @@ tr:hover td { background: rgba(15,30,54,0.5); }
     <div class="tabs">
       <button class="tab active" onclick="setMode('domain')" id="tab-domain">Domain List</button>
       <button class="tab" onclick="setMode('search')" id="tab-search">ICP Search</button>
-      <button class="tab" onclick="setMode('yp')" id="tab-yp">Yellow Pages</button>
+      <button class="tab" onclick="setMode('yp')" id="tab-yp">Google Maps</button>
     </div>
 
     <!-- Domain mode -->
@@ -181,7 +181,7 @@ tr:hover td { background: rgba(15,30,54,0.5); }
       </div>
       <div class="field">
         <label>Industry / Search Term</label>
-        <input type="text" id="yp_industry" placeholder="e.g. roofing contractors">
+        <input type="text" id="yp_industry" placeholder="e.g. roofing contractors Miami">
       </div>
       <div class="field">
         <label>Location</label>
@@ -267,7 +267,7 @@ async function startRun() {
     document.getElementById('stats').style.display = 'none';
     connectSSE();
     startPolling();
-    await fetch('/api/yp', {
+    await fetch('/api/maps', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
