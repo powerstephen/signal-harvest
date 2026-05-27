@@ -126,6 +126,7 @@ tr:hover td { background: rgba(15,30,54,0.5); }
       <button class="tab active" onclick="setMode('domain')" id="tab-domain">Domain List</button>
       <button class="tab" onclick="setMode('search')" id="tab-search">ICP Search</button>
       <button class="tab" onclick="setMode('yp')" id="tab-yp">Google Maps</button>
+      <button class="tab" onclick="setMode('ge')" id="tab-ge">🎯 Email Hunt</button>
     </div>
 
     <!-- Domain mode -->
@@ -192,6 +193,29 @@ tr:hover td { background: rgba(15,30,54,0.5); }
         <input type="number" id="yp_limit" value="20" min="1" max="50">
       </div>
     </div>
+    <!-- Google Email Hunt mode -->
+    <div id="form-ge" style="display:none;">
+      <div style="background:rgba(0,196,212,0.08);border:1px solid rgba(0,196,212,0.2);border-radius:8px;padding:10px 12px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px;">🎯 Email Hunt Mode</div>
+        <div style="font-size:10px;color:var(--muted);">Finds businesses with emails publicly indexed by Google. Targets old-school sites without Cloudflare — your ideal prospects.</div>
+      </div>
+      <div class="field">
+        <label>Campaign Name</label>
+        <input type="text" id="client_name_ge" placeholder="e.g. Roofing Email Hunt">
+      </div>
+      <div class="field">
+        <label>Industry</label>
+        <input type="text" id="ge_industry" placeholder="e.g. roofing contractor">
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="ge_location" placeholder="e.g. Miami FL">
+      </div>
+      <div class="field">
+        <label>Max results</label>
+        <input type="number" id="ge_limit" value="20" min="1" max="50">
+      </div>
+    </div>
     <button class="btn-primary" id="runBtn" onclick="startRun()">🌾 Harvest Prospects</button>
     <button class="btn-cancel" id="cancelBtn" onclick="cancelRun()">✕ Cancel</button>
 
@@ -241,9 +265,11 @@ function setMode(m) {
   document.getElementById('form-domain').style.display = m === 'domain' ? 'block' : 'none';
   document.getElementById('form-search').style.display = m === 'search' ? 'block' : 'none';
   document.getElementById('form-yp').style.display = m === 'yp' ? 'block' : 'none';
+  document.getElementById('form-ge').style.display = m === 'ge' ? 'block' : 'none';
   document.getElementById('tab-domain').classList.toggle('active', m === 'domain');
   document.getElementById('tab-search').classList.toggle('active', m === 'search');
   document.getElementById('tab-yp').classList.toggle('active', m === 'yp');
+  document.getElementById('tab-ge').classList.toggle('active', m === 'ge');
 }
 
 function setRunning(running) {
@@ -256,6 +282,29 @@ function setRunning(running) {
 
 async function startRun() {
   prospects = [];
+
+  // Google Email Hunt mode
+  if (mode === 'ge') {
+    const industry = document.getElementById('ge_industry').value.trim();
+    const location = document.getElementById('ge_location').value.trim();
+    if (!industry || !location) return alert('Please enter industry and location.');
+    setRunning(true);
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('stats').style.display = 'none';
+    connectSSE();
+    startPolling();
+    await fetch('/api/google-email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        industry,
+        location,
+        limit: parseInt(document.getElementById('ge_limit').value) || 20,
+        client_name: document.getElementById('client_name_ge').value
+      })
+    });
+    return;
+  }
 
   // Yellow Pages mode - handle separately
   if (mode === 'yp') {

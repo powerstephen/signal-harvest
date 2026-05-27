@@ -14,6 +14,7 @@ from db.session import init_db, get_db
 from db.models import ProspectSession, Prospect
 from server import runner
 from scraper.maps import search_maps
+from scraper.google_email import search_google_emails
 
 UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
@@ -97,6 +98,58 @@ async def maps_search(request: Request):
                 s = ProspectSession(
                     client_name=client_name or f"{industry} - {location}",
                     mode="maps",
+                    input_data=f"{industry} | {location}",
+                    status="completed",
+                    lead_count=len(results),
+                )
+                db.add(s)
+                db.flush()
+                session_id = s.id
+                for r in results:
+                    row = Prospect(session_id=session_id, **{
+                        k: r.get(k, "") for k in [
+                            "company","website","industry","employee_count","description",
+                            "country","first_name","last_name","email","phone",
+                            "job_title","linkedin_url","signal","relevance_reason","source_url"
+                        ]
+                    })
+                    row.relevance_score = r.get("relevance_score", 0.0)
+                    db.add(row)
+                    await runner.hub.broadcast({"type": "prospect", "prospect": {**r, "id": 0, "session_id": session_id}})
+
+            await runner.hub.broadcast({"type": "done", "session_id": session_id, "status": "completed", "lead_count": len(results)})
+        except Exception as e:
+            await runner.hub.broadcast({"type": "log", "msg": f"Error: {e}"})
+            await runner.hub.broadcast({"type": "done", "session_id": 0, "status": "error", "lead_count": 0})
+
+    asyncio.create_task(_run())
+    return {"ok": True}
+
+
+@app.post("/api/google-email")
+async def google_email_search(request: Request):
+    body = await request.json()
+    industry = body.get("industry", "")
+    location = body.get("location", "")
+    limit = int(body.get("limit", 20))
+    client_name = body.get("client_name", "")
+
+    if not industry or not location:
+        raise HTTPException(400, "industry and location required")
+
+    async def _run():
+        async def log_cb(msg):
+            await runner.hub.broadcast({"type": "log", "msg": msg})
+
+        runner.hub.history_buffer.clear()
+        await runner.hub.broadcast({"type": "start", "session_id": 0})
+
+        try:
+            results = await search_google_emails(industry, location, limit, log_cb)
+            with get_db() as db:
+                s = ProspectSession(
+                    client_name=client_name or f"{industry} - {location}",
+                    mode="google_email",
                     input_data=f"{industry} | {location}",
                     status="completed",
                     lead_count=len(results),
