@@ -125,6 +125,7 @@ tr:hover td { background: rgba(15,30,54,0.5); }
     <div class="tabs">
       <button class="tab active" onclick="setMode('domain')" id="tab-domain">Domain List</button>
       <button class="tab" onclick="setMode('search')" id="tab-search">ICP Search</button>
+      <button class="tab" onclick="setMode('yp')" id="tab-yp">Yellow Pages</button>
     </div>
 
     <!-- Domain mode -->
@@ -172,6 +173,25 @@ tr:hover td { background: rgba(15,30,54,0.5); }
       </div>
     </div>
 
+    <!-- Yellow Pages mode -->
+    <div id="form-yp" style="display:none;">
+      <div class="field">
+        <label>Campaign Name</label>
+        <input type="text" id="client_name_yp" placeholder="e.g. Roofing Miami Outreach">
+      </div>
+      <div class="field">
+        <label>Industry / Search Term</label>
+        <input type="text" id="yp_industry" placeholder="e.g. roofing contractors">
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="yp_location" placeholder="e.g. Miami, FL">
+      </div>
+      <div class="field">
+        <label>Number of results</label>
+        <input type="number" id="yp_limit" value="20" min="1" max="50">
+      </div>
+    </div>
     <button class="btn-primary" id="runBtn" onclick="startRun()">🌾 Harvest Prospects</button>
     <button class="btn-cancel" id="cancelBtn" onclick="cancelRun()">✕ Cancel</button>
 
@@ -220,8 +240,10 @@ function setMode(m) {
   mode = m;
   document.getElementById('form-domain').style.display = m === 'domain' ? 'block' : 'none';
   document.getElementById('form-search').style.display = m === 'search' ? 'block' : 'none';
+  document.getElementById('form-yp').style.display = m === 'yp' ? 'block' : 'none';
   document.getElementById('tab-domain').classList.toggle('active', m === 'domain');
   document.getElementById('tab-search').classList.toggle('active', m === 'search');
+  document.getElementById('tab-yp').classList.toggle('active', m === 'yp');
 }
 
 function setRunning(running) {
@@ -263,6 +285,28 @@ async function startRun() {
   document.getElementById('results').innerHTML = '';
   document.getElementById('stats').style.display = 'none';
   document.getElementById('exportBtn').style.display = 'none';
+
+  if (mode === 'yp') {
+    const industry = document.getElementById('yp_industry').value.trim();
+    const location = document.getElementById('yp_location').value.trim();
+    if (!industry || !location) return alert('Please enter industry and location.');
+    setRunning(true);
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('stats').style.display = 'none';
+    connectSSE();
+    startPolling();
+    await fetch('/api/yp', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        industry,
+        location,
+        limit: parseInt(document.getElementById('yp_limit').value) || 20,
+        client_name: document.getElementById('client_name_yp').value
+      })
+    });
+    return;
+  }
 
   try {
     const resp = await fetch('/api/run', {
