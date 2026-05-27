@@ -7,3 +7,5 @@ python-dotenv
 groq
 scrapling
 httpx
+
+dnspython

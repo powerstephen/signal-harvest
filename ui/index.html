@@ -461,11 +461,11 @@ function renderProspects() {
         ${p.industry ? `<div style="margin-top:4px;"><span class="industry-badge">${p.industry}</span></div>` : ''}
       </td>
       <td>
-        ${p.first_name || p.last_name ? `<div style="font-weight:600;">${p.first_name} ${p.last_name}</div>` : '<span style="color:var(--muted);">—</span>'}
+        ${p.first_name || p.last_name ? `<div style="font-weight:600;">${p.first_name} ${p.last_name}</div><div style="font-size:9px;color:var(--teal);">${p.job_title || ''}</div>` : '<span style="color:var(--muted);">—</span>'}
         ${p.job_title ? `<div style="font-size:10px;color:var(--muted);">${p.job_title}</div>` : ''}
       </td>
       <td>
-        ${p.email ? `<a class="email-link" href="mailto:${p.email}">${p.email}</a>` : '<span style="color:var(--muted);">—</span>'}
+        ${p.email ? `<a class="email-link" href="mailto:${p.email}">${p.email}</a>${p.signal && p.signal.includes('✅') ? '<span style="margin-left:4px;font-size:9px;background:rgba(16,185,129,0.15);color:#6ee7b7;padding:1px 5px;border-radius:3px;">verified</span>' : ''}` : '<span style="color:var(--muted);">—</span>'}
         ${p.phone ? `<div style="font-size:10px;color:var(--muted);">${p.phone}</div>` : ''}
       </td>
       <td style="font-size:11px;color:var(--muted);max-width:200px;">${(p.description||'').substring(0,120)}${p.description?.length>120?'...':''}</td>

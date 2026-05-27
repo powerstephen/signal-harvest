@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 import httpx
 
 from config import SERPAPI_KEY
+from scraper.owner_finder import find_and_verify_owner_email
 
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 
@@ -187,18 +188,29 @@ async def search_google_emails(
             seen_companies.add(company_key)
 
             await log(f"  ✅ {biz['company']} — {biz['email']} | {biz['phone']}")
+
+            # Try to find and verify owner email
+            owner = await find_and_verify_owner_email(
+                company=biz["company"],
+                website=biz["website"],
+                location=location,
+                existing_email=biz["email"],
+                log_cb=log_cb
+            )
+
             results.append({
                 **biz,
                 "industry": industry,
                 "employee_count": "",
                 "country": "US",
-                "first_name": "",
-                "last_name": "",
-                "job_title": "",
+                "first_name": owner.get("first_name", ""),
+                "last_name": owner.get("last_name", ""),
+                "email": owner.get("email", biz["email"]),
+                "job_title": owner.get("job_title", ""),
                 "linkedin_url": "",
-                "signal": "Google indexed email",
-                "relevance_score": 80.0,
-                "relevance_reason": "Email publicly indexed by Google",
+                "signal": "✅ Verified" if owner.get("email_verified") else "Google indexed email",
+                "relevance_score": 95.0 if owner.get("email_verified") else 80.0,
+                "relevance_reason": "Owner email verified" if owner.get("email_verified") else "Email publicly indexed by Google",
             })
 
         await asyncio.sleep(0.5)  # be nice to SerpApi
