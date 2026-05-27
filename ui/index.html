@@ -256,6 +256,30 @@ function setRunning(running) {
 
 async function startRun() {
   prospects = [];
+
+  // Yellow Pages mode - handle separately
+  if (mode === 'yp') {
+    const industry = document.getElementById('yp_industry').value.trim();
+    const location = document.getElementById('yp_location').value.trim();
+    if (!industry || !location) return alert('Please enter industry and location.');
+    setRunning(true);
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('stats').style.display = 'none';
+    connectSSE();
+    startPolling();
+    await fetch('/api/yp', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        industry,
+        location,
+        limit: parseInt(document.getElementById('yp_limit').value) || 20,
+        client_name: document.getElementById('client_name_yp').value
+      })
+    });
+    return;
+  }
+
   let body = {mode};
 
   if (mode === 'domain') {
@@ -285,28 +309,6 @@ async function startRun() {
   document.getElementById('results').innerHTML = '';
   document.getElementById('stats').style.display = 'none';
   document.getElementById('exportBtn').style.display = 'none';
-
-  if (mode === 'yp') {
-    const industry = document.getElementById('yp_industry').value.trim();
-    const location = document.getElementById('yp_location').value.trim();
-    if (!industry || !location) return alert('Please enter industry and location.');
-    setRunning(true);
-    document.getElementById('results').innerHTML = '';
-    document.getElementById('stats').style.display = 'none';
-    connectSSE();
-    startPolling();
-    await fetch('/api/yp', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        industry,
-        location,
-        limit: parseInt(document.getElementById('yp_limit').value) || 20,
-        client_name: document.getElementById('client_name_yp').value
-      })
-    });
-    return;
-  }
 
   try {
     const resp = await fetch('/api/run', {
