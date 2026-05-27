@@ -53,18 +53,28 @@ async def search_maps(industry: str, location: str, limit: int = 20, log_cb=None
 
         if website:
             try:
-                text = await _fetch_site_text(website)
+                # Clean URL - strip UTM params
+                clean_url = website.split("?")[0].rstrip("/")
+                text = await asyncio.wait_for(_fetch_site_text(clean_url), timeout=20)
                 if text:
-                    emails = _regex_emails(text, website.split("/")[2] if "/" in website else website)
+                    from urllib.parse import urlparse
+                    domain = urlparse(clean_url).netloc.replace("www.", "")
+                    emails = _regex_emails(text, domain)
                     email = emails[0] if emails else ""
-                    llm = await extract_contacts_enhanced(name, text, domain_hint=website)
-                    first_name = llm.get("first_name", "")
-                    last_name = llm.get("last_name", "")
-                    job_title = llm.get("job_title", "")
-                    description = llm.get("description", "")
-                    employee_count = llm.get("employee_count", "")
-                    if not email and llm.get("emails"):
-                        email = llm["emails"][0]
+                    try:
+                        llm = await asyncio.wait_for(
+                            extract_contacts_enhanced(name, text, domain_hint=domain),
+                            timeout=15
+                        )
+                        first_name = llm.get("first_name", "")
+                        last_name = llm.get("last_name", "")
+                        job_title = llm.get("job_title", "")
+                        description = llm.get("description", "")
+                        employee_count = llm.get("employee_count", "")
+                        if not email and llm.get("emails"):
+                            email = llm["emails"][0]
+                    except Exception:
+                        pass
             except Exception as e:
                 await log(f"  enrichment error: {e}")
 
