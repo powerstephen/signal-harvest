@@ -5,250 +5,228 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Signal Harvest</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌾</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-:root {
-  --bg: #080d1a; --surface: #0f1e36; --surface2: #162a4a;
-  --border: #1e3560; --teal: #00c4d4; --teal2: #0096a8;
-  --text: #e8edf5; --muted: #64748b;
-  --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fa;--surface:#fff;--surface2:#f1f3f5;
+  --border:#e9ecef;--border2:#dee2e6;
+  --text:#212529;--muted:#6c757d;--subtle:#adb5bd;
+  --teal:#0f9b8e;--teal-light:#e6f7f5;--teal-dark:#0d8a7e;
+  --green:#2f9e44;--green-light:#ebfbee;
+  --blue:#1971c2;--blue-light:#e7f5ff;
+  --red:#c92a2a;--red-light:#fff5f5;
+  --amber:#e67700;--amber-light:#fff9db;
+  --radius:8px;--radius-lg:12px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Montserrat', sans-serif; background: #1a1a1a; color: var(--text); min-height: 100vh; }
-.wrap { max-width: 1100px; margin: 0 auto; background: var(--bg); min-height: 100vh; }
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;height:100vh;overflow:hidden}
 
-/* Header */
-.header { background: #222; border-bottom: 1px solid #333; padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; }
-.brand { font-size: 18px; font-weight: 800; }
-.brand span { color: var(--teal); }
-.brand-sub { font-size: 11px; color: var(--muted); margin-left: 10px; }
+.app{display:grid;grid-template-columns:260px 1fr;height:100vh;background:var(--surface)}
 
-/* Layout */
-.layout { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 52px); }
-.sidebar { border-right: 1px solid var(--border); padding: 24px; background: var(--surface); }
-.main { padding: 24px; }
+/* Sidebar */
+.sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
+.sidebar-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.logo-icon{color:var(--teal);font-size:18px}
+.logo span{color:var(--teal)}
+.sidebar-body{padding:14px;flex:1;overflow-y:auto}
 
-/* Tabs */
-.tabs { display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.tab { flex: 1; padding: 8px; text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; background: transparent; border: none; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.15s; }
-.tab.active { background: var(--teal); color: #080d1a; }
+/* Mode tabs */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:16px}
+.mode-tab{padding:7px 6px;font-size:11px;font-weight:500;border-radius:var(--radius);border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--muted);text-align:center;transition:all 0.15s;white-space:nowrap}
+.mode-tab:hover{background:var(--surface2);color:var(--text)}
+.mode-tab.active{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.mode-tab.featured{background:var(--teal);color:#fff;border-color:var(--teal)}
+.mode-tab.featured:hover{background:var(--teal-dark)}
+
+/* Info box */
+.info-box{background:var(--teal-light);border:1px solid rgba(15,155,142,0.2);border-radius:var(--radius);padding:8px 10px;margin-bottom:14px}
+.info-box-title{font-size:10px;font-weight:600;color:var(--teal);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px}
+.info-box-text{font-size:10px;color:var(--muted);line-height:1.5}
 
 /* Form */
-.field { margin-bottom: 14px; }
-.field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-.field input, .field textarea, .field select {
-  width: 100%; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 6px; padding: 8px 12px; color: var(--text);
-  font-family: 'Montserrat', sans-serif; font-size: 12px;
-}
-.field input:focus, .field textarea:focus { outline: none; border-color: var(--teal); }
-.field textarea { resize: vertical; min-height: 80px; }
-.field-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
+.field{margin-bottom:11px}
+.field label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.field input,.field textarea,.field select{width:100%;padding:7px 10px;font-size:12px;font-family:'Inter',sans-serif;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);transition:border-color 0.15s}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--teal)}
+.field textarea{resize:vertical;min-height:72px}
+.field-hint{font-size:10px;color:var(--subtle);margin-top:4px}
 
-.btn-primary {
-  width: 100%; background: linear-gradient(135deg, var(--teal), var(--teal2));
-  color: #080d1a; font-family: 'Montserrat', sans-serif; font-size: 13px;
-  font-weight: 800; padding: 12px; border: none; border-radius: 8px;
-  cursor: pointer; margin-bottom: 8px;
-}
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-cancel {
-  width: 100%; background: transparent; border: 1px solid var(--border);
-  color: var(--muted); font-family: 'Montserrat', sans-serif; font-size: 12px;
-  font-weight: 600; padding: 8px; border-radius: 8px; cursor: pointer;
-  display: none;
-}
+/* Buttons */
+.btn-harvest{width:100%;padding:9px;background:var(--teal);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Inter',sans-serif;transition:background 0.15s}
+.btn-harvest:hover{background:var(--teal-dark)}
+.btn-harvest:disabled{opacity:0.5;cursor:not-allowed}
+.btn-cancel{width:100%;padding:7px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;margin-top:6px;display:none}
 
-/* Log */
-.log-bar {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-  padding: 8px 12px; font-size: 11px; color: var(--teal); margin-bottom: 16px;
-  display: none; font-family: monospace;
-}
+/* Log bar */
+.log-bar{padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--teal);margin-bottom:12px;display:none;font-family:'Inter',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Sessions */
+.sessions-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--subtle);margin-bottom:8px;margin-top:20px}
+.session-item{padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);margin-bottom:5px;cursor:pointer;transition:border-color 0.15s}
+.session-item:hover{border-color:var(--teal);background:var(--teal-light)}
+.session-row{display:flex;justify-content:space-between;align-items:center}
+.session-name{font-size:11px;font-weight:500;color:var(--text)}
+.session-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:500}
+.badge-done{background:var(--green-light);color:var(--green)}
+.badge-running{background:var(--blue-light);color:var(--blue)}
+.badge-error{background:var(--red-light);color:var(--red)}
+
+/* Main */
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.main-header{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.main-title{font-size:13px;font-weight:600}
+.main-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.btn-export{padding:5px 12px;font-size:11px;font-weight:500;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif}
+.btn-export:hover{background:var(--surface2)}
 
 /* Stats */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
-.stat-val { font-size: 22px; font-weight: 900; color: var(--teal); }
-.stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.stat{background:var(--surface2);border-radius:var(--radius);padding:10px 12px}
+.stat-val{font-size:20px;font-weight:600;color:var(--teal);line-height:1}
+.stat-val.green{color:var(--green)}
+.stat-label{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.4px}
 
-/* Results table */
-.results-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface); }
-td { padding: 10px 12px; border-bottom: 1px solid rgba(30,53,96,0.4); vertical-align: top; }
-tr:hover td { background: rgba(15,30,54,0.5); }
-.company-name { font-weight: 700; color: var(--text); }
-.company-url { font-size: 10px; color: var(--teal); }
-.industry-badge { font-size: 9px; font-weight: 600; background: rgba(0,196,212,0.1); color: var(--teal); padding: 2px 6px; border-radius: 3px; }
-.email-link { color: var(--green); font-size: 11px; }
-.score-high { color: var(--green); font-weight: 700; }
-.score-mid { color: var(--amber); font-weight: 700; }
-.score-low { color: var(--red); font-weight: 700; }
-.signal-tag { font-size: 9px; background: rgba(245,158,11,0.1); color: var(--amber); padding: 2px 6px; border-radius: 3px; }
+/* Table */
+.table-wrap{flex:1;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);padding:8px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface2);position:sticky;top:0;z-index:1}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:var(--bg)}
+.company-name{font-size:12px;font-weight:500;color:var(--text)}
+.company-url{font-size:11px;color:var(--muted);margin-top:1px}
+.company-url a{color:var(--teal);text-decoration:none}
+.company-url a:hover{text-decoration:underline}
+.cat-badge{font-size:9px;padding:2px 7px;border-radius:20px;background:var(--blue-light);color:var(--blue);margin-top:4px;display:inline-block;font-weight:500}
+.owner-name{font-size:12px;font-weight:500}
+.owner-title{font-size:10px;color:var(--muted)}
+.email-wrap{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.email-link{font-size:11px;color:var(--teal);font-weight:500;text-decoration:none}
+.email-link:hover{text-decoration:underline}
+.verified-pill{font-size:9px;padding:2px 6px;border-radius:20px;background:var(--green-light);color:var(--green);font-weight:500;white-space:nowrap}
+.phone-num{font-size:11px;color:var(--muted);margin-top:3px}
+.score-high{font-size:13px;font-weight:600;color:var(--green)}
+.score-mid{font-size:13px;font-weight:600;color:var(--amber)}
+.score-low{font-size:13px;font-weight:500;color:var(--muted)}
+.signal-text{font-size:10px;color:var(--subtle);margin-top:2px}
 
-/* Sessions history */
-.section-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
-.session-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
-.session-item:hover { border-color: var(--teal); }
-.session-name { font-size: 12px; font-weight: 700; }
-.session-meta { font-size: 10px; color: var(--muted); margin-top: 3px; }
-.session-status { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; }
-.status-completed { background: rgba(16,185,129,0.15); color: var(--green); }
-.status-running { background: rgba(0,196,212,0.15); color: var(--teal); }
-.status-error { background: rgba(239,68,68,0.15); color: var(--red); }
-
-.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-.empty-icon { font-size: 40px; margin-bottom: 12px; }
-.export-btn {
-  display: none; background: transparent; border: 1px solid var(--border);
-  color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 11px;
-  font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 16px;
-}
+/* Empty state */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:36px;color:var(--subtle);margin-bottom:12px}
+.empty-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:12px}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-<div class="header">
-  <div>
-    <span class="brand">🌾 Signal<span>Harvest</span></span>
-    <span class="brand-sub">· Prospect Intelligence</span>
-  </div>
-  <div style="font-size:11px;color:var(--muted);" id="headerDate"></div>
-</div>
-
-<div class="layout">
+<div class="app">
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <div class="tabs">
-      <button class="tab active" onclick="setMode('domain')" id="tab-domain">Domain List</button>
-      <button class="tab" onclick="setMode('search')" id="tab-search">ICP Search</button>
-      <button class="tab" onclick="setMode('yp')" id="tab-yp">Google Maps</button>
-      <button class="tab" onclick="setMode('ge')" id="tab-ge">🎯 Email Hunt</button>
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="ti ti-antenna logo-icon" aria-hidden="true"></i>
+        Signal<span>Harvest</span>
+      </div>
+      <div style="font-size:10px;color:var(--subtle)" id="headerDate"></div>
     </div>
+    <div class="sidebar-body">
 
-    <!-- Domain mode -->
-    <div id="form-domain">
-      <div class="field">
-        <label>Client / Campaign Name</label>
-        <input type="text" id="client_name" placeholder="e.g. SMH Q2 Outreach">
+      <!-- Mode tabs -->
+      <div class="mode-grid">
+        <button class="mode-tab active" onclick="setMode('domain')" id="tab-domain">
+          <i class="ti ti-list" style="font-size:12px;display:block;margin-bottom:2px"></i>Domains
+        </button>
+        <button class="mode-tab" onclick="setMode('search')" id="tab-search">
+          <i class="ti ti-users" style="font-size:12px;display:block;margin-bottom:2px"></i>ICP Search
+        </button>
+        <button class="mode-tab" onclick="setMode('yp')" id="tab-yp">
+          <i class="ti ti-map-pin" style="font-size:12px;display:block;margin-bottom:2px"></i>Maps
+        </button>
+        <button class="mode-tab featured" onclick="setMode('ge')" id="tab-ge">
+          <i class="ti ti-target" style="font-size:12px;display:block;margin-bottom:2px"></i>Email Hunt
+        </button>
       </div>
-      <div class="field">
-        <label>Domains (one per line)</label>
-        <textarea id="domains" placeholder="acme.com&#10;example.co.uk&#10;target.io"></textarea>
-        <div class="field-hint">Paste domains or URLs — one per line. Optional: add a signal after a comma (e.g. acme.com, hiring VP Sales)</div>
-      </div>
-      <div class="field">
-        <label>Country</label>
-        <input type="text" id="country_domain" placeholder="e.g. UK, Ireland, US">
-      </div>
-      <div class="field">
-        <label>Notes / Context</label>
-        <input type="text" id="notes_domain" placeholder="e.g. B2B SaaS, looking for CROs">
-      </div>
-    </div>
 
-    <!-- Search mode -->
-    <div id="form-search" style="display:none;">
-      <div class="field">
-        <label>Client / Campaign Name</label>
-        <input type="text" id="client_name_search" placeholder="e.g. SMH Q2 Outreach">
+      <!-- Domain form -->
+      <div id="form-domain">
+        <div class="field"><label>Campaign name</label><input type="text" id="client_name" placeholder="e.g. SMH Q2 Outreach"></div>
+        <div class="field"><label>Domains (one per line)</label><textarea id="domains" placeholder="acme.com&#10;example.co.uk&#10;target.io"></textarea><div class="field-hint">Optional: add a signal after a comma — acme.com, hiring VP Sales</div></div>
+        <div class="field"><label>Country</label><input type="text" id="country_domain" placeholder="e.g. UK, Ireland, US"></div>
+        <div class="field"><label>Notes</label><input type="text" id="notes_domain" placeholder="e.g. B2B SaaS, looking for CROs"></div>
       </div>
-      <div class="field">
-        <label>ICP Description</label>
-        <textarea id="icp" placeholder="e.g. B2B SaaS companies 50-500 employees in the UK with a VP Sales or CRO, likely to invest in sales methodology training"></textarea>
-      </div>
-      <div class="field">
-        <label>Country</label>
-        <input type="text" id="country_search" placeholder="e.g. UK">
-      </div>
-      <div class="field">
-        <label>Leads to find</label>
-        <input type="number" id="limit" value="10" min="1" max="25">
-      </div>
-      <div class="field">
-        <label>Notes</label>
-        <input type="text" id="notes_search" placeholder="Additional context for scoring">
-      </div>
-    </div>
 
-    <!-- Yellow Pages mode -->
-    <div id="form-yp" style="display:none;">
-      <div class="field">
-        <label>Campaign Name</label>
-        <input type="text" id="client_name_yp" placeholder="e.g. Roofing Miami Outreach">
+      <!-- ICP Search form -->
+      <div id="form-search" style="display:none">
+        <div class="field"><label>Campaign name</label><input type="text" id="client_name_search" placeholder="e.g. SMH Q2 Outreach"></div>
+        <div class="field"><label>ICP description</label><textarea id="icp" placeholder="B2B SaaS 50-500 employees UK with VP Sales, likely to invest in sales methodology training"></textarea></div>
+        <div class="field"><label>Country</label><input type="text" id="country_search" placeholder="e.g. UK"></div>
+        <div class="field"><label>Leads to find</label><input type="number" id="limit" value="10" min="1" max="25"></div>
+        <div class="field"><label>Notes</label><input type="text" id="notes_search" placeholder="Additional context"></div>
       </div>
-      <div class="field">
-        <label>Industry / Search Term</label>
-        <input type="text" id="yp_industry" placeholder="e.g. roofing contractors Miami">
-      </div>
-      <div class="field">
-        <label>Location</label>
-        <input type="text" id="yp_location" placeholder="e.g. Miami, FL">
-      </div>
-      <div class="field">
-        <label>Number of results</label>
-        <input type="number" id="yp_limit" value="20" min="1" max="50">
-      </div>
-    </div>
-    <!-- Google Email Hunt mode -->
-    <div id="form-ge" style="display:none;">
-      <div style="background:rgba(0,196,212,0.08);border:1px solid rgba(0,196,212,0.2);border-radius:8px;padding:10px 12px;margin-bottom:14px;">
-        <div style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px;">🎯 Email Hunt Mode</div>
-        <div style="font-size:10px;color:var(--muted);">Finds businesses with emails publicly indexed by Google. Targets old-school sites without Cloudflare — your ideal prospects.</div>
-      </div>
-      <div class="field">
-        <label>Campaign Name</label>
-        <input type="text" id="client_name_ge" placeholder="e.g. Roofing Email Hunt">
-      </div>
-      <div class="field">
-        <label>Industry</label>
-        <input type="text" id="ge_industry" placeholder="e.g. roofing contractor">
-      </div>
-      <div class="field">
-        <label>Location</label>
-        <input type="text" id="ge_location" placeholder="e.g. Miami FL">
-      </div>
-      <div class="field">
-        <label>Max results</label>
-        <input type="number" id="ge_limit" value="20" min="1" max="50">
-      </div>
-    </div>
-    <button class="btn-primary" id="runBtn" onclick="startRun()">🌾 Harvest Prospects</button>
-    <button class="btn-cancel" id="cancelBtn" onclick="cancelRun()">✕ Cancel</button>
 
-    <div style="margin-top:24px;">
-      <div class="section-title">Recent Sessions</div>
+      <!-- Maps form -->
+      <div id="form-yp" style="display:none">
+        <div class="field"><label>Campaign name</label><input type="text" id="client_name_yp" placeholder="e.g. Roofing Miami"></div>
+        <div class="field"><label>Industry</label><input type="text" id="yp_industry" placeholder="e.g. roofing contractors"></div>
+        <div class="field"><label>Location</label><input type="text" id="yp_location" placeholder="e.g. Miami FL"></div>
+        <div class="field"><label>Results</label><input type="number" id="yp_limit" value="20" min="1" max="50"></div>
+      </div>
+
+      <!-- Email Hunt form -->
+      <div id="form-ge" style="display:none">
+        <div class="info-box">
+          <div class="info-box-title"><i class="ti ti-target" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>Email Hunt mode</div>
+          <div class="info-box-text">Finds businesses with emails publicly indexed by Google. Targets old-school sites without Cloudflare — your ideal prospects.</div>
+        </div>
+        <div class="field"><label>Campaign name</label><input type="text" id="client_name_ge" placeholder="e.g. Roofing Email Hunt"></div>
+        <div class="field"><label>Industry</label><input type="text" id="ge_industry" placeholder="e.g. roofing contractor"></div>
+        <div class="field"><label>Location</label><input type="text" id="ge_location" placeholder="e.g. Miami FL"></div>
+        <div class="field"><label>Max results</label><input type="number" id="ge_limit" value="20" min="1" max="50"></div>
+      </div>
+
+      <div class="log-bar" id="logBar"></div>
+      <button class="btn-harvest" id="runBtn" onclick="startRun()">
+        <i class="ti ti-antenna" style="font-size:14px"></i>Harvest Prospects
+      </button>
+      <button class="btn-cancel" id="cancelBtn" onclick="cancelRun()">
+        <i class="ti ti-x" style="font-size:12px"></i>Cancel
+      </button>
+
+      <div class="sessions-label">Recent sessions</div>
       <div id="sessionsList"></div>
     </div>
   </div>
 
   <!-- Main -->
   <div class="main">
-    <div class="log-bar" id="logBar"></div>
-
-    <div id="stats" style="display:none;">
-      <div class="stats">
-        <div class="stat"><div class="stat-val" id="sTotal">0</div><div class="stat-label">Prospects</div></div>
-        <div class="stat"><div class="stat-val" id="sEmails">0</div><div class="stat-label">With Email</div></div>
-        <div class="stat"><div class="stat-val" id="sContacts">0</div><div class="stat-label">Named Contact</div></div>
-        <div class="stat"><div class="stat-val" id="sHigh">0</div><div class="stat-label">High Score</div></div>
+    <div class="main-header">
+      <div>
+        <div class="main-title" id="mainTitle">Signal Harvest</div>
+        <div class="main-meta" id="mainMeta">Select a mode and harvest prospects</div>
       </div>
-      <button class="export-btn" id="exportBtn" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-export" id="exportBtn" onclick="exportCSV()" style="display:none">
+        <i class="ti ti-download" style="font-size:13px"></i>Export CSV
+      </button>
     </div>
 
-    <div id="results">
+    <div class="stats-row" id="statsRow" style="display:none">
+      <div class="stat"><div class="stat-val" id="sTotal">0</div><div class="stat-label">Prospects</div></div>
+      <div class="stat"><div class="stat-val" id="sEmails">0</div><div class="stat-label">With email</div></div>
+      <div class="stat"><div class="stat-val" id="sContacts">0</div><div class="stat-label">Named contact</div></div>
+      <div class="stat"><div class="stat-val green" id="sVerified">0</div><div class="stat-label">Verified</div></div>
+    </div>
+
+    <div class="table-wrap" id="tableWrap">
       <div class="empty">
-        <div class="empty-icon">🌾</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Ready to harvest</div>
-        <div style="font-size:12px;">Paste domains or describe your ICP and hit Harvest.</div>
+        <div class="empty-icon"><i class="ti ti-antenna"></i></div>
+        <div class="empty-title">Ready to harvest</div>
+        <div class="empty-sub">Choose a mode and hit Harvest Prospects</div>
       </div>
     </div>
   </div>
 
-</div>
 </div>
 
 <script>
@@ -258,276 +236,210 @@ let prospects = [];
 let currentSessionId = null;
 let pollInterval = null;
 
-document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
 function setMode(m) {
   mode = m;
-  document.getElementById('form-domain').style.display = m === 'domain' ? 'block' : 'none';
-  document.getElementById('form-search').style.display = m === 'search' ? 'block' : 'none';
-  document.getElementById('form-yp').style.display = m === 'yp' ? 'block' : 'none';
-  document.getElementById('form-ge').style.display = m === 'ge' ? 'block' : 'none';
-  document.getElementById('tab-domain').classList.toggle('active', m === 'domain');
-  document.getElementById('tab-search').classList.toggle('active', m === 'search');
-  document.getElementById('tab-yp').classList.toggle('active', m === 'yp');
-  document.getElementById('tab-ge').classList.toggle('active', m === 'ge');
+  ['domain','search','yp','ge'].forEach(x => {
+    document.getElementById('form-'+x).style.display = x===m ? 'block' : 'none';
+    const tab = document.getElementById('tab-'+x);
+    tab.classList.toggle('active', x===m && x!=='ge');
+    tab.classList.toggle('featured', x==='ge' && x===m || x==='ge');
+    if(x==='ge') tab.classList.toggle('active',false);
+  });
 }
 
-function setRunning(running) {
-  document.getElementById('runBtn').disabled = running;
-  document.getElementById('cancelBtn').style.display = running ? 'block' : 'none';
+function setRunning(r) {
+  document.getElementById('runBtn').disabled = r;
+  document.getElementById('cancelBtn').style.display = r ? 'block' : 'none';
   const log = document.getElementById('logBar');
-  log.style.display = running ? 'block' : 'none';
-  if (!running) log.textContent = '';
+  log.style.display = r ? 'block' : 'none';
+  if(!r) log.textContent = '';
 }
 
 async function startRun() {
   prospects = [];
 
-  // Google Email Hunt mode
-  if (mode === 'ge') {
+  if(mode==='ge') {
     const industry = document.getElementById('ge_industry').value.trim();
     const location = document.getElementById('ge_location').value.trim();
-    if (!industry || !location) return alert('Please enter industry and location.');
+    if(!industry||!location) return alert('Please enter industry and location.');
     setRunning(true);
-    document.getElementById('results').innerHTML = '';
-    document.getElementById('stats').style.display = 'none';
-    connectSSE();
-    startPolling();
-    await fetch('/api/google-email', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        industry,
-        location,
-        limit: parseInt(document.getElementById('ge_limit').value) || 20,
-        client_name: document.getElementById('client_name_ge').value
-      })
-    });
+    resetResults();
+    connectSSE(); startPolling();
+    await fetch('/api/google-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({industry,location,limit:parseInt(document.getElementById('ge_limit').value)||20,client_name:document.getElementById('client_name_ge').value})});
     return;
   }
 
-  // Yellow Pages mode - handle separately
-  if (mode === 'yp') {
+  if(mode==='yp') {
     const industry = document.getElementById('yp_industry').value.trim();
     const location = document.getElementById('yp_location').value.trim();
-    if (!industry || !location) return alert('Please enter industry and location.');
+    if(!industry||!location) return alert('Please enter industry and location.');
     setRunning(true);
-    document.getElementById('results').innerHTML = '';
-    document.getElementById('stats').style.display = 'none';
-    connectSSE();
-    startPolling();
-    await fetch('/api/maps', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        industry,
-        location,
-        limit: parseInt(document.getElementById('yp_limit').value) || 20,
-        client_name: document.getElementById('client_name_yp').value
-      })
-    });
+    resetResults();
+    connectSSE(); startPolling();
+    await fetch('/api/maps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({industry,location,limit:parseInt(document.getElementById('yp_limit').value)||20,client_name:document.getElementById('client_name_yp').value})});
     return;
   }
 
   let body = {mode};
-
-  if (mode === 'domain') {
+  if(mode==='domain') {
     const raw = document.getElementById('domains').value.trim();
-    if (!raw) return alert('Please enter at least one domain.');
-    const domains = raw.split('\n').filter(l => l.trim()).map(l => {
-      const [d, ...rest] = l.split(',');
-      return [d.trim(), rest.join(',').trim()];
-    });
-    body.domains = domains;
+    if(!raw) return alert('Please enter at least one domain.');
+    body.domains = raw.split('\n').filter(l=>l.trim()).map(l=>{const[d,...r]=l.split(',');return[d.trim(),r.join(',').trim()]});
     body.client_name = document.getElementById('client_name').value;
     body.country = document.getElementById('country_domain').value;
     body.notes = document.getElementById('notes_domain').value;
     body.input_data = raw;
   } else {
     const icp = document.getElementById('icp').value.trim();
-    if (!icp) return alert('Please describe your ICP.');
+    if(!icp) return alert('Please describe your ICP.');
     body.icp = icp;
     body.client_name = document.getElementById('client_name_search').value;
     body.country = document.getElementById('country_search').value;
     body.notes = document.getElementById('notes_search').value;
-    body.limit = parseInt(document.getElementById('limit').value) || 10;
+    body.limit = parseInt(document.getElementById('limit').value)||10;
     body.input_data = icp;
   }
 
   setRunning(true);
-  document.getElementById('results').innerHTML = '';
-  document.getElementById('stats').style.display = 'none';
-  document.getElementById('exportBtn').style.display = 'none';
-
+  resetResults();
   try {
-    const resp = await fetch('/api/run', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
-    });
-    if (!resp.ok) {
-      const err = await resp.json();
-      alert(err.detail || 'Failed to start');
-      setRunning(false);
-      return;
-    }
+    const resp = await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!resp.ok){const err=await resp.json();alert(err.detail||'Failed');setRunning(false);return;}
     const data = await resp.json();
     currentSessionId = data.session_id;
-    connectSSE();
-    startPolling();
-  } catch(e) {
-    alert('Error: ' + e.message);
-    setRunning(false);
-  }
+    connectSSE(); startPolling();
+  } catch(e){alert('Error: '+e.message);setRunning(false);}
 }
 
-async function cancelRun() {
-  await fetch('/api/cancel', {method:'POST'});
+function resetResults() {
+  document.getElementById('tableWrap').innerHTML = '<div class="empty"><div class="empty-icon"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i></div><div class="empty-title">Harvesting...</div><div class="empty-sub" id="progressText">Finding prospects</div></div>';
+  document.getElementById('statsRow').style.display = 'none';
+  document.getElementById('exportBtn').style.display = 'none';
 }
 
-function startPolling() {
-  if (pollInterval) clearInterval(pollInterval);
-  pollInterval = setInterval(async () => {
-    try {
+async function cancelRun(){await fetch('/api/cancel',{method:'POST'});}
+
+function startPolling(){
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async()=>{
+    try{
       const r = await fetch('/api/status');
       const s = await r.json();
-      if (!s.running && prospects.length > 0) {
-        clearInterval(pollInterval);
-        setRunning(false);
-        updateStats();
-        loadSessions();
-      } else if (s.running) {
-        document.getElementById('logBar').textContent = `Harvesting... ${prospects.length} prospects found so far`;
+      if(!s.running && prospects.length > 0){clearInterval(pollInterval);setRunning(false);renderTable();updateStats();loadSessions();}
+      else if(s.running){
+        const pt = document.getElementById('progressText');
+        if(pt) pt.textContent = `${prospects.length} prospects found so far...`;
+        document.getElementById('logBar').textContent = `Harvesting... ${prospects.length} prospects found`;
       }
-    } catch(e) {}
-  }, 2000);
+    }catch(e){}
+  },2000);
 }
 
-function connectSSE() {
-  if (sse) sse.close();
-  try {
+function connectSSE(){
+  if(sse) sse.close();
+  try{
     sse = new EventSource('/api/stream');
-    sse.addEventListener('log', e => {
-      const d = JSON.parse(e.data);
-      document.getElementById('logBar').textContent = d.msg;
-      document.getElementById('logBar').style.display = 'block';
-    });
-    sse.addEventListener('prospect', e => {
-      const d = JSON.parse(e.data);
-      prospects.push(d.prospect);
-      renderProspects();
-      updateStats();
-    });
-    sse.addEventListener('done', e => {
-      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-      setRunning(false);
-      updateStats();
-      loadSessions();
-      if (sse) { sse.close(); sse = null; }
-    });
-    sse.addEventListener('ping', () => {});
-    sse.onerror = () => { if (sse) sse.close(); };
-  } catch(e) {}
+    sse.addEventListener('log',e=>{const d=JSON.parse(e.data);document.getElementById('logBar').textContent=d.msg;document.getElementById('logBar').style.display='block';});
+    sse.addEventListener('prospect',e=>{const d=JSON.parse(e.data);prospects.push(d.prospect);renderTable();updateStats();});
+    sse.addEventListener('done',e=>{if(pollInterval){clearInterval(pollInterval);pollInterval=null;}setRunning(false);renderTable();updateStats();loadSessions();if(sse){sse.close();sse=null;}});
+    sse.addEventListener('ping',()=>{});
+    sse.onerror=()=>{if(sse)sse.close();};
+  }catch(e){}
 }
 
-function updateStats() {
+function updateStats(){
   const total = prospects.length;
-  const withEmail = prospects.filter(p => p.email).length;
-  const named = prospects.filter(p => p.first_name).length;
-  const high = prospects.filter(p => p.relevance_score >= 70).length;
+  const withEmail = prospects.filter(p=>p.email).length;
+  const named = prospects.filter(p=>p.first_name).length;
+  const verified = prospects.filter(p=>p.signal&&p.signal.includes('✅')).length;
   document.getElementById('sTotal').textContent = total;
   document.getElementById('sEmails').textContent = withEmail;
   document.getElementById('sContacts').textContent = named;
-  document.getElementById('sHigh').textContent = high;
-  if (total > 0) {
-    document.getElementById('stats').style.display = 'block';
-    document.getElementById('exportBtn').style.display = 'inline-block';
+  document.getElementById('sVerified').textContent = verified;
+  if(total>0){
+    document.getElementById('statsRow').style.display='grid';
+    document.getElementById('exportBtn').style.display='flex';
+    document.getElementById('mainTitle').textContent = prospects[0]?.signal?.includes('email') ? 'Email Hunt Results' : 'Prospects';
+    document.getElementById('mainMeta').textContent = `${total} prospects · ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
   }
 }
 
-function scoreClass(score) {
-  if (score >= 70) return 'score-high';
-  if (score >= 40) return 'score-mid';
+function scoreClass(score){
+  if(score>=80) return 'score-high';
+  if(score>=50) return 'score-mid';
   return 'score-low';
 }
 
-function renderProspects() {
-  if (!prospects.length) return;
-  const rows = prospects.map(p => `
+function renderTable(){
+  if(!prospects.length) return;
+  const rows = prospects.map(p=>`
     <tr>
       <td>
-        <div class="company-name">${p.company || ''}</div>
-        <div class="company-url"><a href="${p.website}" target="_blank" style="color:var(--teal);">${(p.website||'').replace(/^https?:\/\//,'')}</a></div>
-        ${p.industry ? `<div style="margin-top:4px;"><span class="industry-badge">${p.industry}</span></div>` : ''}
+        <div class="company-name">${p.company||''}</div>
+        <div class="company-url"><a href="${p.website||'#'}" target="_blank">${(p.website||'').replace(/^https?:\/\//,'').split('?')[0]}</a></div>
+        ${p.industry?`<span class="cat-badge">${p.industry}</span>`:''}
       </td>
       <td>
-        ${p.first_name || p.last_name ? `<div style="font-weight:600;">${p.first_name} ${p.last_name}</div><div style="font-size:9px;color:var(--teal);">${p.job_title || ''}</div>` : '<span style="color:var(--muted);">—</span>'}
-        ${p.job_title ? `<div style="font-size:10px;color:var(--muted);">${p.job_title}</div>` : ''}
+        ${p.first_name||p.last_name?`<div class="owner-name">${p.first_name||''} ${p.last_name||''}</div><div class="owner-title">${p.job_title||'Contact'}</div>`:'<span style="color:var(--subtle)">—</span>'}
       </td>
       <td>
-        ${p.email ? `<a class="email-link" href="mailto:${p.email}">${p.email}</a>${p.signal && p.signal.includes('✅') ? '<span style="margin-left:4px;font-size:9px;background:rgba(16,185,129,0.15);color:#6ee7b7;padding:1px 5px;border-radius:3px;">verified</span>' : ''}` : '<span style="color:var(--muted);">—</span>'}
-        ${p.phone ? `<div style="font-size:10px;color:var(--muted);">${p.phone}</div>` : ''}
+        ${p.email?`<div class="email-wrap"><a class="email-link" href="mailto:${p.email}">${p.email}</a>${p.signal&&p.signal.includes('✅')?'<span class="verified-pill">verified</span>':''}</div>`:'<span style="color:var(--subtle)">—</span>'}
+        ${p.phone?`<div class="phone-num">${p.phone}</div>`:''}
       </td>
-      <td style="font-size:11px;color:var(--muted);max-width:200px;">${(p.description||'').substring(0,120)}${p.description?.length>120?'...':''}</td>
       <td>
-        ${p.signal ? `<span class="signal-tag">${p.signal}</span>` : ''}
-        ${p.relevance_score > 0 ? `<div class="${scoreClass(p.relevance_score)}" style="margin-top:4px;">${Math.round(p.relevance_score)}</div>` : ''}
+        <div class="${scoreClass(p.relevance_score)}">${p.relevance_score>0?Math.round(p.relevance_score):'—'}</div>
+        <div class="signal-text">${p.relevance_reason||p.signal||''}</div>
       </td>
     </tr>`).join('');
 
-  document.getElementById('results').innerHTML = `
-    <div class="results-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Company</th>
-            <th>Contact</th>
-            <th>Email / Phone</th>
-            <th>Description</th>
-            <th>Signal / Score</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  document.getElementById('tableWrap').innerHTML = `
+    <table>
+      <thead><tr><th>Company</th><th>Contact</th><th>Email / Phone</th><th>Score</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
 
-async function exportCSV() {
-  if (!currentSessionId) return;
+async function exportCSV(){
+  if(!currentSessionId) return;
   window.location = `/api/sessions/${currentSessionId}/export.csv`;
 }
 
-async function loadSessions() {
-  try {
+async function loadSessions(){
+  try{
     const r = await fetch('/api/sessions');
     const sessions = await r.json();
     const el = document.getElementById('sessionsList');
-    if (!sessions.length) {
-      el.innerHTML = '<div style="font-size:11px;color:var(--muted);">No sessions yet.</div>';
-      return;
-    }
-    el.innerHTML = sessions.slice(0, 8).map(s => `
+    if(!sessions.length){el.innerHTML='<div style="font-size:11px;color:var(--subtle)">No sessions yet</div>';return;}
+    el.innerHTML = sessions.slice(0,6).map(s=>`
       <div class="session-item" onclick="loadSession(${s.id})">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="session-name">${s.client_name || (s.mode === 'search' ? 'ICP Search' : 'Domain List')}</div>
-          <span class="session-status status-${s.status}">${s.status}</span>
+        <div class="session-row">
+          <div class="session-name">${s.client_name||s.mode}</div>
+          <span class="badge badge-${s.status==='completed'?'done':s.status==='running'?'running':'error'}">${s.status}</span>
         </div>
-        <div class="session-meta">${s.lead_count} prospects · ${s.mode} · ${s.started_at ? new Date(s.started_at).toLocaleDateString() : ''}</div>
+        <div class="session-meta">${s.lead_count} prospects · ${s.mode} · ${s.started_at?new Date(s.started_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}</div>
       </div>`).join('');
-  } catch(e) {}
+  }catch(e){}
 }
 
-async function loadSession(id) {
-  try {
+async function loadSession(id){
+  try{
     const r = await fetch(`/api/sessions/${id}`);
     const data = await r.json();
     prospects = data.prospects;
     currentSessionId = id;
-    renderProspects();
+    renderTable();
     updateStats();
-  } catch(e) {}
+  }catch(e){}
 }
 
+// Add spin animation
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+
+setMode('ge');
 loadSessions();
 </script>
 </body>
