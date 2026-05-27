@@ -21,6 +21,25 @@ import httpx
 
 from config import SERPAPI_KEY
 
+
+# Domains that are directories - email verified there doesn't mean it's the owner's email
+DIRECTORY_DOMAINS = {
+    "nextdoor.com", "yelp.com", "yellowpages.com", "bbb.org", "angi.com",
+    "homeadvisor.com", "thumbtack.com", "houzz.com", "porch.com",
+    "angieslist.com", "facebook.com", "linkedin.com", "google.com",
+    "issuu.com", "achhd.org", "putnamcountyny.gov", "diamondcertified.org",
+    "roofingdirect.com", "pacepdh.com",
+}
+
+# Words that indicate it's a company name not a person name
+NOT_PERSON_WORDS = {
+    "roofing", "contractor", "construction", "company", "corp", "inc",
+    "llc", "solutions", "services", "systems", "group", "standard",
+    "elite", "premier", "pro", "master", "expert", "owner", "restaurant",
+    "world", "one", "all", "new", "central", "florida", "orlando",
+    "miami", "ads", "below", "health",
+}
+
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 
 # Search templates for finding business owners
@@ -115,7 +134,16 @@ def _extract_person_names(text: str) -> list[tuple[str, str]]:
                 seen.add(key)
                 names.append((first, last))
 
-    return names
+    # Filter out names where first or last name is a company word
+    real_names = []
+    for first, last in names:
+        if first.lower() in NOT_PERSON_WORDS or last.lower() in NOT_PERSON_WORDS:
+            continue
+        if len(first) < 2 or len(last) < 2:
+            continue
+        real_names.append((first, last))
+
+    return real_names
 
 
 async def find_owner_name(company: str, location: str, website: str, log_cb=None) -> tuple[str, str]:
@@ -153,6 +181,10 @@ async def find_owner_name(company: str, location: str, website: str, log_cb=None
 
 async def verify_email_google(email: str) -> bool:
     """Check if an email appears anywhere in Google's index."""
+    # Skip if the email domain is a directory site
+    email_domain = email.split("@")[1].lower() if "@" in email else ""
+    if any(email_domain == d or email_domain.endswith("." + d) for d in DIRECTORY_DOMAINS):
+        return False
     results = await _serp_search(f'"{email}"', num=3)
     return len(results) > 0
 
