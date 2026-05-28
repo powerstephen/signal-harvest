@@ -56,11 +56,26 @@ SKIP_DOMAINS = {
     "indeed.com", "glassdoor.com", "angi.com", "homeadvisor.com",
     "nextdoor.com", "thumbtack.com", "houzz.com", "porch.com",
     "gmx-way.com", "ludowici.com", "eagleroofing.com", "einpresswire.com",
-    "diamondcertified.org", "issuu.com",
+    "diamondcertified.org", "issuu.com", "homeguide.com", "homeadvisor.com",
+    "angieslist.com", "fixr.com", "networx.com", "porch.com",
+    "roofingcontractor.com", "theroofingexpo.com", "roofingmagazine.com",
+    "revize.com", "dallascityhall.com", "cityofirving.org",
+    "westlakeroyalbuildingproducts.com", "owenscorning.com",
+    "gaf.com", "certainteed.com", "buildingproducts.com",
 }
 
 # Skip government TLDs entirely
 SKIP_TLDS = {".gov", ".mil", ".edu"}
+
+# Skip titles that indicate non-business pages
+SKIP_TITLE_WORDS = {
+    "permit search", "interested bidders", "registered contractors",
+    "vendor list", "building department", "county", "city of",
+    "trade show", "expo", "conference", "magazine", "directory",
+    "the best", "top 10", "best roofing companies", "register press",
+    "terms and conditions", "privacy policy", "photos:", "video player",
+    "contractor list", "territory managers", "media planning",
+}
 
 GENERIC_PREFIXES = {
     "noreply", "no-reply", "donotreply", "support", "admin",
@@ -130,7 +145,7 @@ def _extract_business_from_result(result: dict) -> dict | None:
     
     # Skip if title looks like a directory listing or government page
     title_lower = title.lower()
-    if any(x in title_lower for x in ["permit search", "interested bidders", "registered contractors", "vendor list", "building department", "county"]):
+    if any(x in title_lower for x in SKIP_TITLE_WORDS):
         return None
 
     # Find emails in snippet and title

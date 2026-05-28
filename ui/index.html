@@ -423,7 +423,19 @@ function renderTable(){
 }
 
 async function exportCSV(){
-  if(!currentSessionId) return;
+  if(!currentSessionId) {
+    // Try to get most recent session
+    try {
+      const r = await fetch('/api/sessions');
+      const sessions = await r.json();
+      if(sessions.length) {
+        window.location = `/api/sessions/${sessions[0].id}/export.csv`;
+      } else {
+        alert('No session found — run a search first.');
+      }
+    } catch(e) { alert('Export failed.'); }
+    return;
+  }
   window.location = `/api/sessions/${currentSessionId}/export.csv`;
 }
 
