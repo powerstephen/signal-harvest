@@ -14,7 +14,7 @@ from db.session import init_db, get_db
 from db.models import ProspectSession, Prospect
 from server import runner
 from scraper.maps import search_maps
-from scraper.google_email import search_google_emails
+from scraper.google_email import search_google_emails, search_google_emails_stream
 
 UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 

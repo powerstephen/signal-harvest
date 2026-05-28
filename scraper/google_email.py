@@ -251,3 +251,16 @@ async def search_google_emails(
 
     await log(f"✓ Found {len(results)} businesses with emails")
     return results
+
+
+async def search_google_emails_stream(
+    industry: str,
+    location: str,
+    limit: int = 20,
+    enrichment: str = "owner",
+    log_cb=None
+):
+    """Streaming version - yields each result as found so it gets saved immediately."""
+    results = await search_google_emails(industry, location, limit, enrichment, log_cb)
+    for r in results:
+        yield r
