@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -19,6 +20,13 @@ from scraper.google_email import search_google_emails, search_google_emails_stre
 UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 
 app = FastAPI(title="Signal Harvest")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
