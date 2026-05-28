@@ -252,7 +252,7 @@ async def find_and_verify_owner_email(
         await log(f"  Generated {len(permutations)} email permutations for {first} {last}")
 
         # Step 3: Verify via Google (fast, no SMTP needed)
-        for perm in permutations[:6]:  # Check top 6
+        for perm in permutations[:1]:  # Check top 6
             await log(f"  Checking {perm}...")
             if await verify_email_google(perm):
                 await log(f"  ✅ Verified via Google: {perm}")
@@ -262,7 +262,7 @@ async def find_and_verify_owner_email(
             await asyncio.sleep(0.2)
 
         # Step 4: SMTP verify if no Google hit
-        for perm in permutations[:3]:
+        for perm in permutations[:1]:
             try:
                 if await verify_email_smtp(perm):
                     await log(f"  ✅ Verified via SMTP: {perm}")

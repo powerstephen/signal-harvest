@@ -145,7 +145,8 @@ async def google_email_search(request: Request):
         await runner.hub.broadcast({"type": "start", "session_id": 0})
 
         try:
-            results = await search_google_emails(industry, location, limit, log_cb)
+            enrichment = body.get("enrichment", "owner")  # default to owner to save credits
+            results = await search_google_emails(industry, location, limit, enrichment, log_cb)
             with get_db() as db:
                 s = ProspectSession(
                     client_name=client_name or f"{industry} - {location}",

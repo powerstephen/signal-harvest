@@ -107,7 +107,7 @@ async def find_contacts_for_company(
         if location:
             query += f' "{location}"'
 
-        results = await _serp(query, num=5)
+        results = await _serp(query, num=3)
 
         for r in results:
             if len(contacts) >= max_contacts:
@@ -155,7 +155,7 @@ async def find_contacts_for_company(
         perms = _generate_permutations(contact["first_name"], contact["last_name"], domain)
         await log(f"  Checking emails for {contact['first_name']} {contact['last_name']}...")
 
-        for perm in perms[:5]:
+        for perm in perms[:3]:
             if await verify_email_google(perm):
                 contact["email"] = perm
                 contact["email_verified"] = True
@@ -165,7 +165,7 @@ async def find_contacts_for_company(
 
         if not contact["email_verified"] and perms:
             # Try SMTP
-            for perm in perms[:2]:
+            for perm in perms[:1]:
                 try:
                     if await verify_email_smtp(perm):
                         contact["email"] = perm

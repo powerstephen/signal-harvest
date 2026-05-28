@@ -145,6 +145,7 @@ async def search_google_emails(
     industry: str,
     location: str,
     limit: int = 20,
+    enrichment: str = "full",
     log_cb=None
 ) -> list[dict]:
     """
@@ -190,14 +191,19 @@ async def search_google_emails(
 
             await log(f"  ✅ {biz['company']} — {biz['email']} | {biz['phone']}")
 
-            # Find multiple contacts via LinkedIn
-            contacts = await find_contacts_for_company(
-                company=biz["company"],
-                website=biz["website"],
-                location=location,
-                max_contacts=3,
-                log_cb=log_cb
-            )
+            # Enrichment based on selected level
+            if enrichment == "full" and len(results) < 5:
+                contacts = await find_contacts_for_company(
+                    company=biz["company"],
+                    website=biz["website"],
+                    location=location,
+                    max_contacts=3,
+                    log_cb=log_cb
+                )
+            elif enrichment == "basic":
+                contacts = []  # Skip enrichment entirely
+            else:
+                contacts = []  # Will fall through to owner finder
 
             # If no LinkedIn contacts found, fall back to owner finder
             if not contacts:
