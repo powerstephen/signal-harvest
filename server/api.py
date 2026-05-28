@@ -253,38 +253,30 @@ async def export_csv(session_id: int):
         prospects = db.query(Prospect).filter(Prospect.session_id == session_id).order_by(Prospect.relevance_score.desc()).all()
 
         buf = io.StringIO()
-        fields = ["company", "website", "industry", "phone", "description",
-                  "country", "first_name", "last_name", "email", "job_title",
-                  "linkedin_url", "email_verified", "tier", "signal", "relevance_score"]
+        # One row per contact for cadence tool import
+        fields = ["company", "website", "phone", "industry",
+                  "first_name", "last_name", "email", "job_title",
+                  "linkedin_url", "email_verified", "score", "signal"]
         writer = csv.DictWriter(buf, fieldnames=fields)
         writer.writeheader()
         for p in prospects:
-            # Try to get contacts from JSON extras field if available
-            import json as _j
-            contacts = []
-            try:
-                if hasattr(p, 'description') and p.description:
-                    pass
-            except Exception:
-                pass
-
-            # Write primary contact
-            writer.writerow({
+            base = {
                 "company": p.company or "",
                 "website": p.website or "",
-                "industry": p.industry or "",
                 "phone": p.phone or "",
-                "description": p.description or "",
-                "country": p.country or "",
+                "industry": p.industry or "",
+                "score": round(p.relevance_score or 0, 1),
+                "signal": p.signal or "",
+            }
+            # Write primary contact row
+            writer.writerow({
+                **base,
                 "first_name": p.first_name or "",
                 "last_name": p.last_name or "",
                 "email": p.email or "",
                 "job_title": p.job_title or "",
                 "linkedin_url": p.linkedin_url or "",
                 "email_verified": "yes" if p.signal and "✅" in p.signal else "no",
-                "tier": "Owner",
-                "signal": p.signal or "",
-                "relevance_score": round(p.relevance_score or 0, 1),
             })
 
     headers = {"Content-Disposition": f'attachment; filename="prospects_{session_id}.csv"'}
