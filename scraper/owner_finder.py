@@ -146,10 +146,36 @@ def _extract_person_names(text: str) -> list[tuple[str, str]]:
     return real_names
 
 
-async def find_owner_name(company: str, location: str, website: str, log_cb=None) -> tuple[str, str]:
+def extract_name_from_snippet(snippet: str) -> tuple[str, str]:
+    """Try to extract owner name directly from snippet before hitting Google."""
+    import re
+    # Look for explicit owner mentions in snippet
+    patterns = [
+        r'(?:owner|president|founder|principal|ceo|director|proprietor)[/\s:,]+([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20})',
+        r'([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20})[,\s]+(?:owner|president|founder|principal)',
+        r'(?:contact|call|reach)\s+([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20})',
+    ]
+    NOT_NAMES = {"The", "Our", "All", "For", "New", "Best", "Top", "Free", "Get", "Call", "Email"}
+    for pattern in patterns:
+        m = re.search(pattern, snippet, re.IGNORECASE)
+        if m:
+            first, last = m.group(1).strip(), m.group(2).strip()
+            if first not in NOT_NAMES and last not in NOT_NAMES:
+                return first, last
+    return "", ""
+
+
+async def find_owner_name(company: str, location: str, website: str, log_cb=None, snippet: str = "") -> tuple[str, str]:
     """Search Google to find the business owner's name."""
     async def log(msg):
         if log_cb: await log_cb(msg)
+
+    # Try snippet first - free, no API call needed
+    if snippet:
+        first, last = extract_name_from_snippet(snippet)
+        if first and last:
+            await log(f"  Found in snippet: {first} {last}")
+            return first, last
 
     all_names = []
 

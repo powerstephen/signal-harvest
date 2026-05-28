@@ -54,7 +54,13 @@ SKIP_DOMAINS = {
     "linkedin.com", "facebook.com", "twitter.com", "instagram.com",
     "google.com", "yelp.com", "yellowpages.com", "bbb.org",
     "indeed.com", "glassdoor.com", "angi.com", "homeadvisor.com",
+    "nextdoor.com", "thumbtack.com", "houzz.com", "porch.com",
+    "gmx-way.com", "ludowici.com", "eagleroofing.com", "einpresswire.com",
+    "diamondcertified.org", "issuu.com",
 }
+
+# Skip government TLDs entirely
+SKIP_TLDS = {".gov", ".mil", ".edu"}
 
 GENERIC_PREFIXES = {
     "noreply", "no-reply", "donotreply", "support", "admin",
@@ -110,10 +116,21 @@ def _extract_business_from_result(result: dict) -> dict | None:
     snippet = result.get("snippet", "")
     link = result.get("link", "")
 
-    # Skip directory/social sites
+    # Skip directory/social sites and government domains
     from urllib.parse import urlparse
-    host = urlparse(link).netloc.lower().replace("www.", "")
+    parsed = urlparse(link)
+    host = parsed.netloc.lower().replace("www.", "")
+    
+    # Skip government TLDs
+    if any(host.endswith(tld) for tld in SKIP_TLDS):
+        return None
+    
     if any(host == s or host.endswith("." + s) for s in SKIP_DOMAINS):
+        return None
+    
+    # Skip if title looks like a directory listing or government page
+    title_lower = title.lower()
+    if any(x in title_lower for x in ["permit search", "interested bidders", "registered contractors", "vendor list", "building department", "county"]):
         return None
 
     # Find emails in snippet and title
