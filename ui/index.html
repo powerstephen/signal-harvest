@@ -353,7 +353,8 @@ function updateStats(){
   const total = prospects.length;
   const withEmail = prospects.filter(p=>p.email).length;
   const named = prospects.filter(p=>p.first_name).length;
-  const verified = prospects.filter(p=>p.signal&&p.signal.includes('✅')).length;
+  const verified = prospects.filter(p=>p.signal&&p.signal.includes('✅')||p.contacts&&p.contacts.some(c=>c.email_verified)).length;
+  const multiContact = prospects.filter(p=>p.contacts&&p.contacts.length>1).length;
   document.getElementById('sTotal').textContent = total;
   document.getElementById('sEmails').textContent = withEmail;
   document.getElementById('sContacts').textContent = named;
@@ -374,29 +375,38 @@ function scoreClass(score){
 
 function renderTable(){
   if(!prospects.length) return;
-  const rows = prospects.map(p=>`
-    <tr>
+  const rows = prospects.map(p=>{
+    const contacts = p.contacts || (p.first_name ? [{first_name:p.first_name,last_name:p.last_name,job_title:p.job_title,email:p.email,linkedin_url:p.linkedin_url,email_verified:p.signal&&p.signal.includes('✅'),tier_label:'Owner'}] : []);
+    const contactsHtml = contacts.length ? contacts.map(c=>`
+      <div style="padding:5px 0;border-bottom:1px solid var(--border);last-child:border-bottom:none">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:500">${c.first_name||''} ${c.last_name||''}</span>
+          <span style="font-size:9px;padding:1px 6px;border-radius:20px;background:var(--blue-light);color:var(--blue);font-weight:500">${c.tier_label||c.job_title||''}</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${c.job_title||''}</div>
+        ${c.email?`<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><a class="email-link" href="mailto:${c.email}" style="font-size:11px">${c.email}</a>${c.email_verified?'<span class="verified-pill">verified</span>':''}</div>`:''}
+        ${c.linkedin_url?`<a href="${c.linkedin_url}" target="_blank" style="font-size:10px;color:var(--teal);display:flex;align-items:center;gap:3px;margin-top:2px;text-decoration:none"><i class="ti ti-brand-linkedin" style="font-size:12px"></i>LinkedIn</a>`:''}
+      </div>`).join('') : '<span style="color:var(--subtle);font-size:11px">—</span>';
+
+    return `<tr>
       <td>
         <div class="company-name">${p.company||''}</div>
         <div class="company-url"><a href="${p.website||'#'}" target="_blank">${(p.website||'').replace(/^https?:\/\//,'').split('?')[0]}</a></div>
         ${p.industry?`<span class="cat-badge">${p.industry}</span>`:''}
+        ${p.phone?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${p.phone}</div>`:''}
       </td>
-      <td>
-        ${p.first_name||p.last_name?`<div class="owner-name">${p.first_name||''} ${p.last_name||''}</div><div class="owner-title">${p.job_title||'Contact'}</div>`:'<span style="color:var(--subtle)">—</span>'}
-      </td>
-      <td>
-        ${p.email?`<div class="email-wrap"><a class="email-link" href="mailto:${p.email}">${p.email}</a>${p.signal&&p.signal.includes('✅')?'<span class="verified-pill">verified</span>':''}</div>`:'<span style="color:var(--subtle)">—</span>'}
-        ${p.phone?`<div class="phone-num">${p.phone}</div>`:''}
-      </td>
+      <td style="min-width:200px">${contactsHtml}</td>
       <td>
         <div class="${scoreClass(p.relevance_score)}">${p.relevance_score>0?Math.round(p.relevance_score):'—'}</div>
         <div class="signal-text">${p.relevance_reason||p.signal||''}</div>
+        ${contacts.length>1?`<div style="font-size:10px;color:var(--teal);margin-top:3px;font-weight:500">${contacts.length} contacts</div>`:''}
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   document.getElementById('tableWrap').innerHTML = `
     <table>
-      <thead><tr><th>Company</th><th>Contact</th><th>Email / Phone</th><th>Score</th></tr></thead>
+      <thead><tr><th>Company</th><th>Contacts</th><th>Score</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }

@@ -12,6 +12,7 @@ import httpx
 
 from config import SERPAPI_KEY
 from scraper.owner_finder import find_and_verify_owner_email
+from scraper.linkedin_finder import find_contacts_for_company
 
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 
@@ -189,28 +190,55 @@ async def search_google_emails(
 
             await log(f"  ✅ {biz['company']} — {biz['email']} | {biz['phone']}")
 
-            # Try to find and verify owner email
-            owner = await find_and_verify_owner_email(
+            # Find multiple contacts via LinkedIn
+            contacts = await find_contacts_for_company(
                 company=biz["company"],
                 website=biz["website"],
                 location=location,
-                existing_email=biz["email"],
+                max_contacts=3,
                 log_cb=log_cb
             )
+
+            # If no LinkedIn contacts found, fall back to owner finder
+            if not contacts:
+                owner = await find_and_verify_owner_email(
+                    company=biz["company"],
+                    website=biz["website"],
+                    location=location,
+                    existing_email=biz["email"],
+                    log_cb=log_cb
+                )
+                if owner.get("first_name"):
+                    contacts = [{
+                        "first_name": owner.get("first_name", ""),
+                        "last_name": owner.get("last_name", ""),
+                        "job_title": owner.get("job_title", "Owner"),
+                        "linkedin_url": "",
+                        "tier_label": "Owner",
+                        "tier_signal": "Decision maker",
+                        "email": owner.get("email", biz["email"]),
+                        "email_verified": owner.get("email_verified", False),
+                    }]
+
+            # Build result with contacts array
+            verified_count = sum(1 for c in contacts if c.get("email_verified"))
+            primary = contacts[0] if contacts else {}
 
             results.append({
                 **biz,
                 "industry": industry,
                 "employee_count": "",
                 "country": "US",
-                "first_name": owner.get("first_name", ""),
-                "last_name": owner.get("last_name", ""),
-                "email": owner.get("email", biz["email"]),
-                "job_title": owner.get("job_title", ""),
-                "linkedin_url": "",
-                "signal": "✅ Verified" if owner.get("email_verified") else "Google indexed email",
-                "relevance_score": 95.0 if owner.get("email_verified") else 80.0,
-                "relevance_reason": "Owner email verified" if owner.get("email_verified") else "Email publicly indexed by Google",
+                "first_name": primary.get("first_name", ""),
+                "last_name": primary.get("last_name", ""),
+                "email": primary.get("email", biz["email"]),
+                "job_title": primary.get("job_title", ""),
+                "linkedin_url": primary.get("linkedin_url", ""),
+                "contacts": contacts,
+                "contact_count": len(contacts),
+                "signal": f"✅ {verified_count} verified" if verified_count else "Google indexed email",
+                "relevance_score": 95.0 if verified_count else 80.0,
+                "relevance_reason": f"{len(contacts)} contacts found" if contacts else "Email publicly indexed by Google",
             })
 
         await asyncio.sleep(0.5)  # be nice to SerpApi
