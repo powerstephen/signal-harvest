@@ -293,3 +293,65 @@ async def export_csv(session_id: int):
 
 if UI_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(UI_DIR)), name="static")
+
+class OwnerEmailRequest(BaseModel):
+    domain: str
+    company: str = ""
+
+@app.post("/api/owner-email")
+async def get_owner_email(payload: OwnerEmailRequest):
+    """Find owner email for a single domain — used by Prospect Engine Get Email button."""
+    try:
+        from scraper.owner_finder import find_owner_name
+        from scraper.email_verifier import verify_email_smtp
+        import re
+
+        domain = payload.domain.replace("https://","").replace("http://","").split("/")[0].strip()
+        company = payload.company
+
+        # Try to find owner name
+        first, last = await find_owner_name(company, "", "https://"+domain)
+
+        # Generate email permutations
+        emails = []
+        if first and last:
+            f, l = first.lower(), last.lower()
+            emails = [
+                f"{f}.{l}@{domain}",
+                f"{f}@{domain}",
+                f"{f[0]}{l}@{domain}",
+                f"{l}@{domain}",
+            ]
+        emails += [f"info@{domain}", f"contact@{domain}", f"owner@{domain}"]
+
+        # Verify each
+        for email in emails:
+            try:
+                valid = await verify_email_smtp(email)
+                if valid:
+                    return {
+                        "email": email,
+                        "verified": True,
+                        "name": f"{first} {last}".strip() if first else "",
+                    }
+            except Exception:
+                continue
+
+        # Return best guess unverified
+        best = emails[0] if emails else None
+        return {"email": best, "verified": False, "name": f"{first} {last}".strip() if first else ""}
+
+    except Exception as e:
+        return {"email": None, "verified": False, "error": str(e)}
+
+@app.post("/api/verify-email")
+async def verify_single_email(payload: dict):
+    """Verify a single email address."""
+    try:
+        from scraper.email_verifier import verify_email_smtp
+        email = payload.get("email","")
+        valid = await verify_email_smtp(email)
+        return {"email": email, "valid": valid}
+    except Exception as e:
+        return {"email": payload.get("email",""), "valid": False, "error": str(e)}
+
